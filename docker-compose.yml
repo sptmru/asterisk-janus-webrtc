@@ -1,0 +1,21 @@
+services:
+  janus-softphone:
+    build: .
+    container_name: janus-softphone
+    restart: unless-stopped
+    ports:
+      - "9669:80"
+
+  asterisk:
+    build: ./asterisk
+    container_name: janus-asterisk
+    restart: unless-stopped
+    network_mode: bridge
+    ports:
+      - "5060:5060/udp"
+      - "5060:5060/tcp"
+      - "8088:8088/tcp"
+      - "8089:8089/tcp"
+      - "10000-10100:10000-10100/udp"
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
