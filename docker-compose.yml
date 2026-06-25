@@ -10,7 +10,9 @@ services:
     build: ./asterisk
     container_name: janus-asterisk
     restart: unless-stopped
-    network_mode: bridge
+    networks:
+      voice_net:
+        ipv4_address: 172.30.0.10
     ports:
       - "5060:5060/udp"
       - "5060:5060/tcp"
@@ -19,3 +21,31 @@ services:
       - "10000-10100:10000-10100/udp"
     volumes:
       - /etc/letsencrypt:/etc/letsencrypt:ro
+
+  janus:
+    image: canyan/janus-gateway:latest
+    container_name: janus-gateway
+    restart: unless-stopped
+    depends_on:
+      - asterisk
+    ports:
+      - "8188:8188/tcp"
+      - "8989:8989/tcp"
+      - "20000-20100:20000-20100/udp"
+    extra_hosts:
+      - "webrtc.sptm.online:172.30.0.10"
+    networks:
+      voice_net:
+        ipv4_address: 172.30.0.20
+    volumes:
+      - ./janus/config/janus.jcfg:/usr/local/etc/janus/janus.jcfg:ro
+      - ./janus/config/janus.transport.websockets.jcfg:/usr/local/etc/janus/janus.transport.websockets.jcfg:ro
+      - ./janus/config/janus.plugin.sip.jcfg:/usr/local/etc/janus/janus.plugin.sip.jcfg:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+
+networks:
+  voice_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24

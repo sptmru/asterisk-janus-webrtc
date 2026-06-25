@@ -1,0 +1,11 @@
+general: {
+	local_ip = "172.30.0.20"
+	local_media_ip = "172.30.0.20"
+	sdp_ip = "172.30.0.20"
+	keepalive_interval = 120
+	behind_nat = true
+	user_agent = "janus-softphone-sip"
+	register_ttl = 3600
+	rtp_port_range = "20000-20100"
+	sip_timer_t1x64 = 32000
+}
