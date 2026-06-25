@@ -1,0 +1,48 @@
+# Terraform local state and provider cache
+**/.terraform/
+**/.terraform.lock.hcl
+**/terraform.tfstate
+**/terraform.tfstate.*
+**/*.tfplan
+**/wif.plan
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.venv/
+venv/
+
+# Node
+node_modules/
+.next/
+out/
+coverage/
+.eslintcache
+*.log
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Env files (per-app .env stays gitignored; .env.example is committed)
+.env
+.env.local
+.env.*.local
+CLAUDE.local.md
+GEMINI.local.md
+.codex/local/
+.claude/settings.local.json
+.gemini/settings.local.json
+
+# Misc
+*.swp
+*.swo
+.playwright-mcp/

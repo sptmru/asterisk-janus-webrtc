@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "fs": "^0.0.1-security",
+    "https": "^1.0.0",
+    "jssip": "^3.13.6"
+  },
+  "devDependencies": {
+    "ws": "^8.20.1"
+  }
+}

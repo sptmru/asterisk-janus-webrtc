@@ -1,0 +1,2524 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Softphone</title>
+  <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+  <script src="janus.js"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0e0f14;
+      --surface: #16181f;
+      --surface2: #1e2029;
+      --surface3: #262830;
+      --border: #2e3040;
+      --accent: #4f8ef7;
+      --accent2: #6c63ff;
+      --green: #22c55e;
+      --red: #ef4444;
+      --amber: #f59e0b;
+      --text: #e8eaf0;
+      --text2: #8b90a0;
+      --text3: #555a6e;
+      --radius: 14px;
+      --radius-sm: 8px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background-image:
+        radial-gradient(ellipse at 20% 20%, rgba(79, 142, 247, 0.06) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 80%, rgba(108, 99, 255, 0.06) 0%, transparent 60%);
+    }
+
+    .phone {
+      width: 360px;
+      background: var(--surface);
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      box-shadow: 0 32px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.03);
+    }
+
+    /* ── Header ── */
+    .header {
+      padding: 18px 20px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+    }
+
+    .brand {
+      font-weight: 600;
+      font-size: 15px;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text3);
+      transition: all 0.3s;
+    }
+
+    .brand-dot.connected {
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+    }
+
+    .brand-dot.connecting {
+      background: var(--amber);
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0.3
+      }
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-8px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0
+      }
+
+      to {
+        opacity: 1
+      }
+    }
+
+    @keyframes ringPulse {
+
+      0%,
+      100% {
+        transform: scale(1)
+      }
+
+      50% {
+        transform: scale(1.05)
+      }
+    }
+
+    @keyframes timerTick {
+      from {
+        opacity: 0.7
+      }
+
+      to {
+        opacity: 1
+      }
+    }
+
+    .reg-badge {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--text3);
+      padding: 3px 8px;
+      background: var(--surface3);
+      border-radius: 20px;
+    }
+
+    .reg-badge.ok {
+      color: var(--green);
+    }
+
+    .reg-badge.fail {
+      color: var(--red);
+    }
+
+    /* ── SSL Trust Banner ── */
+    .ssl-banner {
+      display: none;
+      padding: 10px 16px;
+      background: rgba(245, 158, 11, 0.1);
+      border-bottom: 1px solid rgba(245, 158, 11, 0.3);
+      animation: slideDown 0.3s ease;
+    }
+
+    .ssl-banner.show {
+      display: block;
+    }
+
+    .ssl-banner-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--amber);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ssl-banner-text {
+      font-size: 11px;
+      color: var(--text2);
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    .ssl-banner-steps {
+      font-size: 11px;
+      color: var(--text2);
+      margin-bottom: 8px;
+      padding-left: 12px;
+      line-height: 1.8;
+    }
+
+    .btn-trust {
+      width: 100%;
+      padding: 8px;
+      background: var(--amber);
+      color: #0e0f14;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      letter-spacing: 0.3px;
+      transition: opacity 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-trust:hover {
+      opacity: 0.85;
+    }
+
+    .btn-trust-done {
+      width: 100%;
+      padding: 7px;
+      background: none;
+      color: var(--green);
+      border: 1px solid var(--green);
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      margin-top: 6px;
+      transition: background 0.2s;
+    }
+
+    .btn-trust-done:hover {
+      background: rgba(34, 197, 94, 0.1);
+    }
+
+    /* ── Config Panel ── */
+    .config-toggle {
+      width: 100%;
+      padding: 10px 20px;
+      background: none;
+      border: none;
+      border-bottom: 1px solid var(--border);
+      color: var(--text2);
+      font-size: 12px;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: color 0.2s;
+    }
+
+    .config-toggle:hover {
+      color: var(--text);
+    }
+
+    .config-toggle span {
+      font-size: 10px;
+    }
+
+    .config-panel {
+      display: none;
+      padding: 16px 20px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      animation: slideDown 0.2s ease;
+    }
+
+    .config-panel.open {
+      display: block;
+    }
+
+    .field {
+      margin-bottom: 10px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 11px;
+      color: var(--text3);
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .field input {
+      width: 100%;
+      padding: 8px 10px;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-size: 13px;
+      font-family: 'DM Mono', monospace;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .field input:focus {
+      border-color: var(--accent);
+    }
+
+    .btn-connect {
+      width: 100%;
+      padding: 9px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 4px;
+      font-family: 'DM Sans', sans-serif;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    .btn-connect:hover {
+      opacity: 0.9;
+    }
+
+    .btn-connect:active {
+      transform: scale(0.98);
+    }
+
+    /* ── Display ── */
+    .display {
+      padding: 20px 20px 12px;
+      min-height: 80px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .number-display {
+      font-family: 'DM Mono', monospace;
+      font-size: 28px;
+      font-weight: 300;
+      color: var(--text);
+      letter-spacing: 2px;
+      min-height: 38px;
+      display: flex;
+      align-items: center;
+    }
+
+    .number-display.placeholder {
+      color: var(--text3);
+      font-size: 16px;
+      letter-spacing: 0;
+    }
+
+    .call-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .call-status-text {
+      font-size: 12px;
+      color: var(--text2);
+    }
+
+    .call-timer {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--green);
+      display: none;
+      animation: timerTick 1s infinite alternate;
+    }
+
+    .call-direction {
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 20px;
+      font-weight: 600;
+      display: none;
+    }
+
+    .call-direction.outgoing {
+      background: rgba(79, 142, 247, 0.15);
+      color: var(--accent);
+    }
+
+    .call-direction.incoming {
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--green);
+    }
+
+    /* ── Dialpad ── */
+    .dialpad {
+      padding: 0 16px 16px;
+    }
+
+    .dialpad-input-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .dialpad-input {
+      flex: 1;
+      padding: 10px 12px;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 16px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .dialpad-input:focus {
+      border-color: var(--accent);
+    }
+
+    .btn-backspace {
+      padding: 10px 14px;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text2);
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.15s;
+    }
+
+    .btn-backspace:hover {
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    .keys {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .key {
+      aspect-ratio: 1.3;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 500;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.1s;
+      user-select: none;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .key sub {
+      font-size: 8px;
+      letter-spacing: 1.5px;
+      color: var(--text3);
+      font-weight: 400;
+      line-height: 1;
+      margin-top: 2px;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .key:hover {
+      background: var(--surface3);
+      border-color: #3a3d50;
+      transform: translateY(-1px);
+    }
+
+    .key:active {
+      transform: scale(0.95);
+      background: var(--surface);
+    }
+
+    .key::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(255, 255, 255, 0.08), transparent 70%);
+      opacity: 0;
+      transition: opacity 0.1s;
+    }
+
+    .key:active::after {
+      opacity: 1;
+    }
+
+    /* ── Action Buttons ── */
+    .actions {
+      padding: 0 16px 16px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .action-btn {
+      aspect-ratio: 1;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text2);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      gap: 3px;
+      transition: all 0.15s;
+    }
+
+    .action-btn span.label {
+      font-size: 9px;
+      font-family: 'DM Mono', monospace;
+      letter-spacing: 0.5px;
+      color: var(--text3);
+    }
+
+    .action-btn:hover:not(:disabled) {
+      background: var(--surface3);
+      color: var(--text);
+    }
+
+    .action-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .action-btn.active {
+      background: rgba(79, 142, 247, 0.15);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .action-btn.active span.label {
+      color: var(--accent);
+    }
+
+    .action-btn.danger {
+      background: rgba(239, 68, 68, 0.12);
+      border-color: var(--red);
+      color: var(--red);
+    }
+
+    .action-btn.danger span.label {
+      color: var(--red);
+    }
+
+    /* ── Call Button ── */
+    .call-row {
+      padding: 0 16px 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .btn-call {
+      padding: 14px;
+      border-radius: 50px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .btn-call:active {
+      transform: scale(0.96);
+    }
+
+    .btn-call:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-dial {
+      background: linear-gradient(135deg, var(--green), #16a34a);
+      color: white;
+      box-shadow: 0 4px 20px rgba(34, 197, 94, 0.3);
+    }
+
+    .btn-dial:hover:not(:disabled) {
+      box-shadow: 0 6px 24px rgba(34, 197, 94, 0.4);
+    }
+
+    .btn-hangup {
+      background: linear-gradient(135deg, var(--red), #dc2626);
+      color: white;
+      box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-hangup:hover:not(:disabled) {
+      box-shadow: 0 6px 24px rgba(239, 68, 68, 0.4);
+    }
+
+    /* ── Record Button ── */
+    .record-row {
+      padding: 0 16px 16px;
+    }
+
+    .btn-record {
+      width: 100%;
+      padding: 9px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text2);
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.15s;
+    }
+
+    .btn-record:hover:not(:disabled) {
+      background: var(--surface3);
+      color: var(--text);
+    }
+
+    .btn-record:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .btn-record.recording {
+      background: rgba(239, 68, 68, 0.12);
+      border-color: var(--red);
+      color: var(--red);
+    }
+
+    .rec-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .btn-record.recording .rec-dot {
+      animation: blink 0.8s infinite;
+    }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+    }
+
+    .tab {
+      flex: 1;
+      padding: 10px 6px;
+      background: none;
+      border: none;
+      color: var(--text3);
+      font-size: 11px;
+      font-family: 'DM Mono', monospace;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      transition: color 0.2s;
+      position: relative;
+    }
+
+    .tab .tab-icon {
+      font-size: 16px;
+    }
+
+    .tab.active {
+      color: var(--accent);
+    }
+
+    .tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 20%;
+      right: 20%;
+      height: 2px;
+      background: var(--accent);
+      border-radius: 2px 2px 0 0;
+    }
+
+    .tab-count {
+      position: absolute;
+      top: 6px;
+      right: 12px;
+      background: var(--red);
+      color: white;
+      font-size: 9px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── Tab Panels ── */
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    /* ── History ── */
+    .history-list {
+      max-height: 220px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--surface3) transparent;
+    }
+
+    .history-item {
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.15s;
+      animation: slideDown 0.2s ease;
+    }
+
+    .history-item:hover {
+      background: var(--surface2);
+    }
+
+    .history-item:last-child {
+      border-bottom: none;
+    }
+
+    .history-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .history-icon.out {
+      background: rgba(79, 142, 247, 0.15);
+    }
+
+    .history-icon.in {
+      background: rgba(34, 197, 94, 0.15);
+    }
+
+    .history-icon.missed {
+      background: rgba(239, 68, 68, 0.15);
+    }
+
+    .history-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .history-number {
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .history-meta {
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 2px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .history-recall {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      color: var(--text3);
+      cursor: pointer;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+
+    .history-recall:hover {
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    .empty-state {
+      padding: 30px 20px;
+      text-align: center;
+      color: var(--text3);
+      font-size: 13px;
+    }
+
+    /* ── Recordings Panel ── */
+    .recordings-list {
+      max-height: 220px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--surface3) transparent;
+    }
+
+    .rec-item {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      animation: slideDown 0.2s ease;
+    }
+
+    .rec-item:last-child {
+      border-bottom: none;
+    }
+
+    .rec-item-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .rec-number {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .rec-meta {
+      font-size: 10px;
+      color: var(--text3);
+    }
+
+    .rec-item audio {
+      width: 100%;
+      height: 28px;
+      border-radius: 6px;
+      margin-bottom: 6px;
+    }
+
+    .rec-item-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .btn-dl {
+      flex: 1;
+      padding: 5px 10px;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text2);
+      text-decoration: none;
+      font-size: 11px;
+      text-align: center;
+      transition: all 0.15s;
+      display: block;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .btn-dl:hover {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    /* ── Status Bar ── */
+    .status-bar {
+      padding: 8px 20px;
+      background: var(--surface2);
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      font-family: 'DM Mono', monospace;
+      color: var(--text3);
+      min-height: 34px;
+      display: flex;
+      align-items: center;
+    }
+
+    .status-bar.error {
+      color: var(--red);
+    }
+
+    .status-bar.success {
+      color: var(--green);
+    }
+
+    .status-bar.info {
+      color: var(--accent);
+    }
+
+    /* ── Incoming Call Overlay ── */
+    .incoming-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(6px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .incoming-overlay.show {
+      display: flex;
+    }
+
+    .incoming-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 32px 28px;
+      text-align: center;
+      width: 300px;
+      box-shadow: 0 40px 80px rgba(0, 0, 0, 0.8);
+      animation: ringPulse 1.5s infinite;
+    }
+
+    .incoming-avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      margin: 0 auto 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      box-shadow: 0 0 30px rgba(79, 142, 247, 0.3);
+    }
+
+    .incoming-label {
+      font-size: 12px;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-family: 'DM Mono', monospace;
+      margin-bottom: 4px;
+    }
+
+    .incoming-number {
+      font-family: 'DM Mono', monospace;
+      font-size: 22px;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 24px;
+    }
+
+    .incoming-actions {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+    }
+
+    .btn-answer,
+    .btn-reject {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: none;
+      font-size: 22px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-answer {
+      background: linear-gradient(135deg, var(--green), #16a34a);
+      box-shadow: 0 4px 20px rgba(34, 197, 94, 0.4);
+    }
+
+    .btn-answer:hover {
+      transform: scale(1.08);
+    }
+
+    .btn-reject {
+      background: linear-gradient(135deg, var(--red), #dc2626);
+      box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+    }
+
+    .btn-reject:hover {
+      transform: scale(1.08);
+    }
+
+    /* ── Volume Slider ── */
+    .volume-row {
+      padding: 0 20px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .volume-label {
+      font-size: 16px;
+    }
+
+    .volume-slider {
+      flex: 1;
+      -webkit-appearance: none;
+      height: 3px;
+      border-radius: 2px;
+      background: var(--surface3);
+      outline: none;
+    }
+
+    .volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+    }
+
+    audio {
+      display: none;
+    }
+
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--surface3);
+      border-radius: 2px;
+    }
+
+    /* ── Debug Panel ── */
+    .debug-wrap {
+      width: 360px;
+      margin-top: 16px;
+      background: #0a0b0f;
+      border: 1px solid #1e2235;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .debug-header {
+      padding: 10px 14px;
+      background: #111320;
+      border-bottom: 1px solid #1e2235;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .debug-title {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: #4f8ef7;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .debug-blink {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #4f8ef7;
+      animation: blink 1.2s infinite;
+    }
+
+    .debug-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .debug-btn {
+      padding: 3px 9px;
+      background: #1e2235;
+      border: 1px solid #2e3350;
+      border-radius: 6px;
+      color: #8b90a0;
+      font-size: 10px;
+      font-family: 'DM Mono', monospace;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .debug-btn:hover {
+      background: #262a40;
+      color: #e8eaf0;
+    }
+
+    .debug-log {
+      height: 280px;
+      overflow-y: auto;
+      padding: 8px 0;
+      scrollbar-width: thin;
+      scrollbar-color: #1e2235 transparent;
+    }
+
+    .log-entry {
+      padding: 3px 14px;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      line-height: 1.6;
+      display: flex;
+      gap: 8px;
+      border-left: 2px solid transparent;
+      animation: fadeIn 0.15s ease;
+    }
+
+    .log-entry:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .log-time {
+      color: #3a3f55;
+      flex-shrink: 0;
+      font-size: 10px;
+      padding-top: 1px;
+    }
+
+    .log-tag {
+      flex-shrink: 0;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      padding: 1px 5px;
+      border-radius: 3px;
+      align-self: flex-start;
+      margin-top: 1px;
+    }
+
+    .log-msg {
+      color: #8b90a0;
+      flex: 1;
+      word-break: break-all;
+    }
+
+    .log-entry.info {
+      border-left-color: #4f8ef7;
+    }
+
+    .log-entry.info .log-tag {
+      background: rgba(79, 142, 247, 0.15);
+      color: #4f8ef7;
+    }
+
+    .log-entry.info .log-msg {
+      color: #c5cde8;
+    }
+
+    .log-entry.success {
+      border-left-color: #22c55e;
+    }
+
+    .log-entry.success .log-tag {
+      background: rgba(34, 197, 94, 0.15);
+      color: #22c55e;
+    }
+
+    .log-entry.success .log-msg {
+      color: #86efac;
+    }
+
+    .log-entry.error {
+      border-left-color: #ef4444;
+    }
+
+    .log-entry.error .log-tag {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+    }
+
+    .log-entry.error .log-msg {
+      color: #fca5a5;
+    }
+
+    .log-entry.warn {
+      border-left-color: #f59e0b;
+    }
+
+    .log-entry.warn .log-tag {
+      background: rgba(245, 158, 11, 0.15);
+      color: #f59e0b;
+    }
+
+    .log-entry.warn .log-msg {
+      color: #fcd34d;
+    }
+
+    .log-entry.ws {
+      border-left-color: #6c63ff;
+    }
+
+    .log-entry.ws .log-tag {
+      background: rgba(108, 99, 255, 0.15);
+      color: #a5b4fc;
+    }
+
+    .log-entry.ws .log-msg {
+      color: #c4b5fd;
+    }
+
+    .log-entry.sip {
+      border-left-color: #06b6d4;
+    }
+
+    .log-entry.sip .log-tag {
+      background: rgba(6, 182, 212, 0.15);
+      color: #06b6d4;
+    }
+
+    .log-entry.sip .log-msg {
+      color: #a5f3fc;
+    }
+
+    .log-entry.ice {
+      border-left-color: #f97316;
+    }
+
+    .log-entry.ice .log-tag {
+      background: rgba(249, 115, 22, 0.15);
+      color: #f97316;
+    }
+
+    .log-entry.ice .log-msg {
+      color: #fdba74;
+    }
+
+    .log-entry.media {
+      border-left-color: #a855f7;
+    }
+
+    .log-entry.media .log-tag {
+      background: rgba(168, 85, 247, 0.15);
+      color: #a855f7;
+    }
+
+    .log-entry.media .log-msg {
+      color: #d8b4fe;
+    }
+
+    .log-entry.dim {
+      border-left-color: transparent;
+    }
+
+    .log-entry.dim .log-tag {
+      background: #1a1d28;
+      color: #555a6e;
+    }
+
+    .log-entry.dim .log-msg {
+      color: #555a6e;
+    }
+
+    .debug-footer {
+      padding: 6px 14px;
+      background: #111320;
+      border-top: 1px solid #1e2235;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: #3a3f55;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    #logCount {
+      color: #4f8ef7;
+    }
+  </style>
+</head>
+
+<body>
+  <div style="display:flex;flex-direction:column;align-items:center;">
+
+    <!-- Incoming Call Overlay -->
+    <div class="incoming-overlay" id="incomingOverlay">
+      <div class="incoming-card">
+        <div class="incoming-avatar">📞</div>
+        <div class="incoming-label">Incoming Call</div>
+        <div class="incoming-number" id="incomingNumber">Unknown</div>
+        <div class="incoming-actions">
+          <button class="btn-answer" onclick="answerCall()" title="Answer">📲</button>
+          <button class="btn-reject" onclick="rejectCall()" title="Reject">📵</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="phone">
+
+      <!-- Header -->
+      <div class="header">
+        <div class="brand">
+          <div class="brand-dot" id="connDot"></div>
+          Softphone
+        </div>
+        <div class="reg-badge" id="regBadge">Unregistered</div>
+      </div>
+
+      <!-- ✅ SSL Trust Banner (shown when cert not trusted) -->
+      <div class="ssl-banner" id="sslBanner">
+        <div class="ssl-banner-title">⚠️ SSL Certificate Not Trusted</div>
+        <div class="ssl-banner-text">
+          Your browser is blocking the WebSocket because the server uses a self-signed certificate.
+          You need to trust it once in your browser.
+        </div>
+        <div class="ssl-banner-steps">
+          1. Click the button below to open the server URL<br>
+          2. Click <strong>"Advanced"</strong> → <strong>"Proceed anyway"</strong><br>
+          3. Come back here and click <strong>"I've Trusted It"</strong>
+        </div>
+        <button class="btn-trust" id="btnOpenCert" onclick="openCertPage()">
+          🔓 Open Certificate Page
+        </button>
+        <button class="btn-trust-done" onclick="hideSslBanner()">
+          ✅ I've Trusted It — Try Again
+        </button>
+      </div>
+
+      <!-- Config Toggle -->
+      <button class="config-toggle" onclick="toggleConfig()">
+        ⚙ Connection Settings
+        <span id="configArrow">▼</span>
+      </button>
+
+      <!-- Config Panel -->
+      <div class="config-panel" id="configPanel">
+        <div class="field">
+          <label>SIP Username</label>
+          <input id="username" value="caliberfocus1_sip.in" autocomplete="off">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input id="password" type="password" value="CaL!Ber@#$101">
+        </div>
+        <div class="field">
+          <label>Domain</label>
+          <input id="domain" value="cloudpbx.siplink.in">
+        </div>
+        <div class="field">
+          <label>WSS URL</label>
+          <input id="wss" value="wss://cloudpbx.siplink.in:8989">
+        </div>
+        <div class="field">
+          <label>STUN Server</label>
+          <input id="stun" value="stun:stun.l.google.com:19302">
+        </div>
+        <button class="btn-connect" id="connectBtn" onclick="toggleConnection()">Connect</button>
+      </div>
+
+      <!-- Display -->
+      <div class="display">
+        <div class="number-display" id="numberDisplay">
+          <span class="placeholder" id="displayPlaceholder">Enter number...</span>
+        </div>
+        <div class="call-info">
+          <div class="call-direction" id="callDirection"></div>
+          <div class="call-status-text" id="callStatusText"></div>
+          <div class="call-timer" id="callTimer">00:00</div>
+        </div>
+      </div>
+
+      <!-- Dialpad -->
+      <div class="dialpad">
+        <div class="dialpad-input-row">
+          <input class="dialpad-input" id="dialInput" placeholder="Number to dial" onkeydown="handleDialKey(event)"
+            oninput="updateDisplay()">
+          <button class="btn-backspace" onclick="backspace()">⌫</button>
+        </div>
+        <div class="keys">
+          <button class="key" onclick="pressKey('1')">1<sub></sub></button>
+          <button class="key" onclick="pressKey('2')">2<sub>ABC</sub></button>
+          <button class="key" onclick="pressKey('3')">3<sub>DEF</sub></button>
+          <button class="key" onclick="pressKey('4')">4<sub>GHI</sub></button>
+          <button class="key" onclick="pressKey('5')">5<sub>JKL</sub></button>
+          <button class="key" onclick="pressKey('6')">6<sub>MNO</sub></button>
+          <button class="key" onclick="pressKey('7')">7<sub>PQRS</sub></button>
+          <button class="key" onclick="pressKey('8')">8<sub>TUV</sub></button>
+          <button class="key" onclick="pressKey('9')">9<sub>WXYZ</sub></button>
+          <button class="key" onclick="pressKey('*')">*</button>
+          <button class="key" onclick="pressKey('0')">0<sub>+</sub></button>
+          <button class="key" onclick="pressKey('#')">#</button>
+        </div>
+      </div>
+
+      <!-- Volume -->
+      <div class="volume-row">
+        <span class="volume-label">🔊</span>
+        <input type="range" class="volume-slider" id="volumeSlider" min="0" max="1" step="0.05" value="1"
+          oninput="setVolume(this.value)">
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="actions">
+        <button class="action-btn" id="muteBtn" onclick="toggleMute()" disabled>
+          🎙<span class="label">MUTE</span>
+        </button>
+        <button class="action-btn" id="holdBtn" onclick="toggleHold()" disabled>
+          ⏸<span class="label">HOLD</span>
+        </button>
+        <button class="action-btn" id="xferBtn" onclick="transferPrompt()" disabled>
+          ↗<span class="label">XFER</span>
+        </button>
+        <button class="action-btn" id="dtmfBtn" onclick="sendDTMF()" disabled>
+          ⌨<span class="label">DTMF</span>
+        </button>
+      </div>
+
+      <!-- Record -->
+      <div class="record-row">
+        <button class="btn-record" id="recordBtn" onclick="toggleRecording()" disabled>
+          <span class="rec-dot"></span>
+          <span id="recordLabel">Record Call</span>
+        </button>
+      </div>
+
+      <!-- Call Buttons -->
+      <div class="call-row">
+        <button class="btn-call btn-dial" id="callBtn" onclick="makeCall()" disabled>
+          📞 Call
+        </button>
+        <button class="btn-call btn-hangup" id="hangupBtn" onclick="hangup()" disabled>
+          📵 End
+        </button>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('dialpad-tab', this)">
+          <span class="tab-icon">📞</span>Dial
+        </button>
+        <button class="tab" onclick="switchTab('history-tab', this)">
+          <span class="tab-icon">🕐</span>History
+          <div class="tab-count" id="historyCount"></div>
+        </button>
+        <button class="tab" onclick="switchTab('recordings-tab', this)">
+          <span class="tab-icon">🔴</span>Recorded
+          <div class="tab-count" id="recCount"></div>
+        </button>
+      </div>
+
+      <!-- Tab Panels -->
+      <div class="tab-panel active" id="dialpad-tab"></div>
+      <div class="tab-panel" id="history-tab">
+        <div class="history-list" id="historyList">
+          <div class="empty-state">No call history yet</div>
+        </div>
+      </div>
+      <div class="tab-panel" id="recordings-tab">
+        <div class="recordings-list" id="recordingsList">
+          <div class="empty-state">No recordings yet</div>
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div class="status-bar" id="statusBar">Ready</div>
+    </div>
+
+    <audio id="remoteAudio" autoplay></audio>
+    <audio id="ringtone" loop></audio>
+
+  </div>
+
+  <!-- ── Debug Panel ── -->
+  <div class="debug-wrap">
+    <div class="debug-header">
+      <div class="debug-title">
+        <div class="debug-blink"></div>
+        Debug Console
+      </div>
+      <div class="debug-actions">
+        <button class="debug-btn" onclick="testWSS()">Test WSS</button>
+        <button class="debug-btn" onclick="copyLogs()">Copy</button>
+        <button class="debug-btn" onclick="clearLogs()">Clear</button>
+      </div>
+    </div>
+    <div class="debug-log" id="debugLog"></div>
+    <div class="debug-footer">
+      <span id="logCount">0 entries</span>
+      <span id="debugTime">--:--:--</span>
+    </div>
+  </div>
+
+  <script>
+    // ─── State ────────────────────────────────────────────────────────────────
+    let janus = null;
+    let sipHandle = null;
+    let isConnected = false;
+    let isRegistered = false;
+    let isMuted = false;
+    let isOnHold = false;
+    let isRecording = false;
+    let inCall = false;
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let localStream = null;
+    let remoteStream = null;
+    let callStartTime = null;
+    let timerInterval = null;
+    let callHistory = [];
+    let recordingsList = [];
+    let recordingCount = 0;
+    let currentCallNumber = '';
+    let currentCallDirection = '';
+    let _incomingJsep = null;
+    let _janusInitialized = false;
+
+    // Shared AudioContext for DTMF tones (avoids leak)
+    let _dtmfCtx = null;
+    function getDtmfCtx() {
+      if (!_dtmfCtx) _dtmfCtx = new AudioContext();
+      return _dtmfCtx;
+    }
+
+    // ─── SSL Banner ───────────────────────────────────────────────────────────
+    function showSslBanner() {
+      const banner = document.getElementById('sslBanner');
+      banner.classList.add('show');
+      const wssUrl = document.getElementById('wss').value.trim();
+      const httpsUrl = wssUrl.replace('wss://', 'https://');
+      document.getElementById('btnOpenCert').dataset.url = httpsUrl;
+      dbg('warn', '⚠ SSL cert not trusted — showing trust banner');
+      dbg('warn', 'Open this URL in browser and accept the cert: ' + httpsUrl);
+    }
+
+    function hideSslBanner() {
+      document.getElementById('sslBanner').classList.remove('show');
+      dbg('info', 'SSL banner dismissed — retrying connection...');
+      if (!isConnected) {
+        connect();
+      }
+    }
+
+    function openCertPage() {
+      const url = document.getElementById('btnOpenCert').dataset.url
+        || document.getElementById('wss').value.trim().replace('wss://', 'https://');
+      dbg('info', 'Opening cert page: ' + url);
+      window.open(url, '_blank');
+    }
+
+    // ─── UI Helpers ───────────────────────────────────────────────────────────
+    function setStatus(msg, type = '') {
+      const bar = document.getElementById('statusBar');
+      bar.textContent = msg;
+      bar.className = 'status-bar' + (type ? ' ' + type : '');
+    }
+
+    function toggleConfig() {
+      const panel = document.getElementById('configPanel');
+      const arrow = document.getElementById('configArrow');
+      panel.classList.toggle('open');
+      arrow.textContent = panel.classList.contains('open') ? '▲' : '▼';
+    }
+
+    function switchTab(id, btn) {
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    function updateDisplay() {
+      const val = document.getElementById('dialInput').value;
+      const nd = document.getElementById('numberDisplay');
+      if (val) {
+        nd.innerHTML = '';
+        nd.appendChild(document.createTextNode(val));
+        nd.classList.remove('placeholder');
+      } else {
+        nd.innerHTML = '<span class="placeholder" id="displayPlaceholder">Enter number...</span>';
+      }
+    }
+
+    function pressKey(k) {
+      const input = document.getElementById('dialInput');
+      input.value += k;
+      updateDisplay();
+      if (inCall && sipHandle) {
+        sipHandle.send({ message: { request: 'dtmf_info', digit: k } });
+      }
+      playTone(k);
+    }
+
+    function backspace() {
+      const input = document.getElementById('dialInput');
+      input.value = input.value.slice(0, -1);
+      updateDisplay();
+    }
+
+    function handleDialKey(e) {
+      if (e.key === 'Enter') makeCall();
+    }
+
+    function setVolume(v) {
+      document.getElementById('remoteAudio').volume = v;
+      const icon = v == 0 ? '🔇' : v < 0.5 ? '🔉' : '🔊';
+      document.querySelector('.volume-label').textContent = icon;
+    }
+
+    function setCallControls(active) {
+      ['muteBtn', 'holdBtn', 'xferBtn', 'dtmfBtn', 'recordBtn'].forEach(id => {
+        document.getElementById(id).disabled = !active;
+      });
+      document.getElementById('hangupBtn').disabled = !active;
+      document.getElementById('callBtn').disabled = active || !isRegistered;
+    }
+
+    function setRegistrationUI(registered) {
+      isRegistered = registered;
+      const dot = document.getElementById('connDot');
+      const badge = document.getElementById('regBadge');
+      if (registered) {
+        dot.className = 'brand-dot connected';
+        badge.className = 'reg-badge ok';
+        badge.textContent = document.getElementById('username').value;
+        document.getElementById('callBtn').disabled = false;
+      } else {
+        dot.className = 'brand-dot';
+        badge.className = 'reg-badge';
+        badge.textContent = 'Unregistered';
+        document.getElementById('callBtn').disabled = true;
+      }
+    }
+
+    // ─── Connection (Janus) ───────────────────────────────────────────────────
+    function toggleConnection() {
+      if (isConnected) { disconnect(); } else { connect(); }
+    }
+
+    function connect() {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+      const domain = document.getElementById("domain").value.trim();
+      const wssUrl = document.getElementById("wss").value.trim();
+      const stun = document.getElementById("stun").value.trim();
+
+      if (!username || !domain || !wssUrl) {
+        setStatus('Fill in all connection fields', 'error');
+        return;
+      }
+
+      document.getElementById('connDot').className = 'brand-dot connecting';
+      document.getElementById('regBadge').textContent = 'Connecting...';
+      setStatus('Connecting to Janus at ' + wssUrl + '...', 'info');
+
+      const isSecure = wssUrl.startsWith('wss://');
+      if (isSecure) {
+        dbg('ws', 'Pre-flight WSS check...', wssUrl);
+        const preCheck = new WebSocket(wssUrl, 'janus-protocol');
+        let preCheckDone = false;
+
+        const preTimeout = setTimeout(() => {
+          if (!preCheckDone) {
+            preCheckDone = true;
+            dbg('warn', 'Pre-flight timeout — proceeding with Janus anyway');
+            startJanus(username, password, domain, wssUrl, stun);
+          }
+        }, 4000);
+
+        preCheck.onopen = () => {
+          if (preCheckDone) return;
+          preCheckDone = true;
+          clearTimeout(preTimeout);
+          preCheck.close();
+          dbg('success', '✅ Pre-flight WSS OK — cert is trusted');
+          document.getElementById('sslBanner').classList.remove('show');
+          startJanus(username, password, domain, wssUrl, stun);
+        };
+
+        preCheck.onerror = () => {
+          if (preCheckDone) return;
+          preCheckDone = true;
+          clearTimeout(preTimeout);
+          dbg('error', '❌ Pre-flight WSS failed — likely SSL cert not trusted');
+          showSslBanner();
+          setStatus('SSL certificate not trusted — see banner above', 'error');
+          document.getElementById('connDot').className = 'brand-dot';
+          document.getElementById('regBadge').textContent = 'Unregistered';
+        };
+
+        preCheck.onclose = (e) => {
+          if (!preCheckDone && e.code === 1006) {
+            preCheckDone = true;
+            clearTimeout(preTimeout);
+            dbg('error', '❌ WSS closed abnormally (code 1006) — SSL cert likely not trusted');
+            showSslBanner();
+            setStatus('SSL certificate not trusted — see banner above', 'error');
+            document.getElementById('connDot').className = 'brand-dot';
+            document.getElementById('regBadge').textContent = 'Unregistered';
+          }
+        };
+      } else {
+        dbg('ws', 'Using plain ws:// — no SSL check needed');
+        document.getElementById('sslBanner').classList.remove('show');
+        startJanus(username, password, domain, wssUrl, stun);
+      }
+    }
+
+    function startJanus(username, password, domain, wssUrl, stun) {
+      const sipUri = 'sip:' + username + '@' + domain;
+      dbg('info', 'Connecting with SIP URI', sipUri);
+      dbg('ws', 'Janus WebSocket URL', wssUrl);
+
+      const iceServers = stun ? [{ urls: stun }] : [];
+
+      function doInit() {
+        janus = new Janus({
+          server: wssUrl,
+          iceServers: iceServers,
+          success: function () {
+            isConnected = true;
+            document.getElementById('connDot').className = 'brand-dot connecting';
+            document.getElementById('connectBtn').textContent = 'Disconnect';
+            document.getElementById('sslBanner').classList.remove('show');
+            setStatus('Janus connected, attaching SIP plugin...', 'info');
+            dbg('ws', '✅ Janus session created');
+            attachSipPlugin(username, password, domain);
+          },
+          error: function (error) {
+            isConnected = false;
+            document.getElementById('connDot').className = 'brand-dot';
+            document.getElementById('regBadge').textContent = 'Unregistered';
+            dbg('error', '❌ Janus connection failed', String(error));
+            if (String(error).includes('1006') || String(error).includes('unreachable')) {
+              showSslBanner();
+              setStatus('Cannot reach Janus server — see banner above', 'error');
+            } else {
+              setStatus('Janus connection failed: ' + error, 'error');
+            }
+          },
+          destroyed: function () {
+            dbg('warn', 'Janus session destroyed');
+            isConnected = false;
+            setRegistrationUI(false);
+            document.getElementById('connDot').className = 'brand-dot';
+            document.getElementById('connectBtn').textContent = 'Connect';
+          }
+        });
+      }
+
+      if (!_janusInitialized) {
+        Janus.init({
+          debug: 'all',
+          callback: function () {
+            _janusInitialized = true;
+            dbg('dim', 'Janus library initialized');
+            doInit();
+          }
+        });
+      } else {
+        doInit();
+      }
+    }
+
+    function attachSipPlugin(username, password, domain) {
+      janus.attach({
+        plugin: 'janus.plugin.sip',
+        success: function (pluginHandle) {
+          sipHandle = pluginHandle;
+          dbg('sip', '✅ SIP plugin attached', 'handle id=' + sipHandle.getId());
+
+          const registerMsg = {
+            request: 'register',
+            username: 'sip:' + username + '@' + domain,
+            secret: password
+          };
+          dbg('sip', 'Sending register', JSON.stringify({ username: registerMsg.username }));
+          sipHandle.send({ message: registerMsg });
+          setStatus('SIP plugin attached, registering...', 'info');
+        },
+        error: function (error) {
+          dbg('error', '❌ SIP plugin attach failed', String(error));
+          setStatus('SIP plugin error: ' + error, 'error');
+        },
+        consentDialog: function (on) {
+          dbg('info', 'Consent dialog ' + (on ? 'OPEN' : 'CLOSED'));
+        },
+        iceState: function (state) {
+          const level = state === 'connected' || state === 'completed' ? 'success'
+            : state === 'failed' ? 'error' : state === 'disconnected' ? 'warn' : 'ice';
+          dbg(level, 'ICE connection → ' + state);
+          if (state === 'failed') dbg('error', '⚠ ICE failed — check STUN/TURN or NAT');
+          if (state === 'connected') dbg('success', '✅ ICE connected — peer-to-peer path established');
+        },
+        mediaState: function (medium, on, mid) {
+          dbg('media', 'Media ' + medium + ' is ' + (on ? 'ON' : 'OFF'), mid ? 'mid=' + mid : '');
+        },
+        webrtcState: function (on) {
+          dbg('ice', 'WebRTC PeerConnection is ' + (on ? 'UP' : 'DOWN'));
+        },
+        slowLink: function (uplink, lost, mid) {
+          dbg('warn', 'Slow link detected', (uplink ? 'sending' : 'receiving') + ' lost=' + lost);
+        },
+        onmessage: function (msg, jsep) {
+          handleSipMessage(msg, jsep);
+        },
+        onlocaltrack: function (track, on) {
+          dbg('media', 'Local track ' + (on ? 'added' : 'removed'), 'kind=' + track.kind);
+          if (on && track.kind === 'audio') {
+            localStream = new MediaStream([track]);
+          }
+        },
+        onremotetrack: function (track, mid, on) {
+          dbg('media', (on ? '✅ Remote track received' : 'Remote track removed'), 'kind=' + track.kind + ' mid=' + mid);
+          if (on && track.kind === 'audio') {
+            if (!remoteStream) remoteStream = new MediaStream();
+            remoteStream.addTrack(track);
+            document.getElementById('remoteAudio').srcObject = remoteStream;
+            document.getElementById('recordBtn').disabled = false;
+            track.addEventListener('ended', () => dbg('warn', 'Remote track ENDED'));
+            track.addEventListener('mute', () => dbg('warn', 'Remote track MUTED'));
+            track.addEventListener('unmute', () => dbg('media', 'Remote track unmuted'));
+          }
+        },
+        oncleanup: function () {
+          dbg('dim', 'SIP plugin cleanup');
+          localStream = null;
+          remoteStream = null;
+        },
+        detached: function () {
+          dbg('warn', 'SIP plugin detached');
+          sipHandle = null;
+        }
+      });
+    }
+
+    // ─── Janus SIP Message Handler ────────────────────────────────────────────
+    function handleSipMessage(msg, jsep) {
+      const result = msg['result'];
+      if (msg['error']) {
+        dbg('error', '❌ SIP error', msg['error_code'] + ' ' + msg['error']);
+        setStatus('SIP error: ' + msg['error'], 'error');
+        return;
+      }
+      if (!result) return;
+
+      const event = result['event'];
+
+      if (result['code'] && !event) {
+        const code = result['code'];
+        const reason = result['reason'] || '';
+        dbg('sip', 'SIP response', code + ' ' + reason);
+      }
+
+      if (event === 'registering') {
+        dbg('sip', 'SIP registering...');
+        document.getElementById('connDot').className = 'brand-dot connecting';
+      }
+
+      if (event === 'registered') {
+        dbg('success', '✅ SIP Registered');
+        const username = document.getElementById('username').value.trim();
+        const domain = document.getElementById('domain').value.trim();
+        setRegistrationUI(true);
+        setStatus('Registered as ' + username + '@' + domain, 'success');
+        document.getElementById('connectBtn').textContent = 'Disconnect';
+      }
+
+      if (event === 'registration_failed') {
+        const code = result['code'] || 0;
+        const reason = result['reason'] || 'unknown';
+        dbg('error', '❌ Registration FAILED', code + ' ' + reason);
+        setRegistrationUI(false);
+        document.getElementById('connDot').className = 'brand-dot';
+        if (code === 401 || code === 407) {
+          setStatus('Wrong username or password (' + code + ')', 'error');
+          dbg('error', '❌ Auth failed — check SIP username and password');
+        } else if (code === 403) {
+          setStatus('Extension not allowed / IP restricted (403)', 'error');
+        } else if (code === 404) {
+          setStatus('Extension not found on PBX (404)', 'error');
+        } else {
+          setStatus('Registration failed: ' + code + ' ' + reason, 'error');
+        }
+      }
+
+      if (event === 'calling') {
+        dbg('sip', 'Calling...');
+        setStatus('Calling ' + currentCallNumber + '...', 'info');
+      }
+
+      if (event === 'proceeding') {
+        dbg('sip', 'Call proceeding');
+      }
+
+      if (event === 'progress') {
+        dbg('sip', 'Call progress (ringing)');
+        setStatus('Ringing...', 'info');
+        if (jsep) {
+          sipHandle.handleRemoteJsep({ jsep: jsep });
+        }
+      }
+
+      if (event === 'accepted') {
+        dbg('success', '✅ Call ACCEPTED');
+        inCall = true;
+        if (jsep) {
+          sipHandle.handleRemoteJsep({ jsep: jsep });
+        }
+        hideIncomingCall();
+        playRingtone(false);
+        setCallControls(true);
+        startTimer();
+        document.getElementById('callDirection').className = 'call-direction ' + (currentCallDirection === 'in' ? 'incoming' : 'outgoing');
+        document.getElementById('callDirection').textContent = currentCallDirection === 'in' ? '↙ incoming' : '↗ outgoing';
+        document.getElementById('callDirection').style.display = 'block';
+        document.getElementById('callStatusText').textContent = currentCallNumber;
+        setStatus('In call with ' + currentCallNumber, 'success');
+      }
+
+      if (event === 'incomingcall') {
+        dbg('sip', '── Incoming call ──');
+        inCall = false;
+        _incomingJsep = jsep;
+        currentCallDirection = 'in';
+        const callerUri = result['username'] || result['displayname'] || 'Unknown';
+        const callerNum = callerUri.replace(/^sip:/, '').replace(/@.*$/, '');
+        currentCallNumber = callerNum;
+        dbg('sip', 'From', callerUri);
+        showIncomingCall(callerNum);
+        playRingtone(true);
+        document.getElementById('hangupBtn').disabled = false;
+      }
+
+      if (event === 'hangup') {
+        const code = result['code'] || 0;
+        const reason = result['reason'] || 'normal';
+        dbg('info', 'Call HANGUP', code + ' ' + reason);
+        onCallEnded('ended', reason);
+      }
+
+      if (event === 'updating') {
+        dbg('sip', 'Call updating (re-INVITE)');
+        if (jsep) {
+          sipHandle.createAnswer({
+            jsep: jsep,
+            tracks: [{ type: 'audio', capture: true }],
+            success: function (answerJsep) {
+              sipHandle.send({ message: { request: 'update' }, jsep: answerJsep });
+              dbg('sip', 'Sent update answer');
+            },
+            error: function (error) {
+              dbg('error', 'Update answer failed', String(error));
+            }
+          });
+        }
+      }
+
+      if (event === 'transfer') {
+        dbg('sip', 'Transfer notification received');
+      }
+
+      if (event === 'message') {
+        dbg('sip', 'SIP MESSAGE received');
+      }
+    }
+
+    function disconnect() {
+      if (inCall && sipHandle) {
+        try {
+          sipHandle.send({ message: { request: 'hangup' } });
+          sipHandle.hangup();
+        } catch (e) { }
+      }
+      if (sipHandle) {
+        try {
+          sipHandle.send({ message: { request: 'unregister' } });
+        } catch (e) { }
+      }
+      if (janus) {
+        try { janus.destroy(); } catch (e) { }
+        janus = null;
+      }
+      sipHandle = null;
+      inCall = false;
+      isConnected = false;
+      setRegistrationUI(false);
+      document.getElementById('connDot').className = 'brand-dot';
+      document.getElementById('connectBtn').textContent = 'Connect';
+      setStatus('Disconnected', '');
+    }
+
+    // ─── Call Ended Handler ───────────────────────────────────────────────────
+    function onCallEnded(reason, cause) {
+      hideIncomingCall();
+      playRingtone(false);
+      const duration = callStartTime ? getElapsedSeconds() : 0;
+      if (isRecording) stopRecording();
+      stopTimer();
+      setCallControls(false);
+      document.getElementById('callDirection').style.display = 'none';
+      document.getElementById('callTimer').style.display = 'none';
+      document.getElementById('callStatusText').textContent = '';
+      if (isMuted) { isMuted = false; document.getElementById('muteBtn').classList.remove('active'); }
+      if (isOnHold) { isOnHold = false; document.getElementById('holdBtn').classList.remove('active'); }
+      addHistory({ number: currentCallNumber, direction: currentCallDirection === 'in' ? 'in' : 'out', duration, reason, time: new Date() });
+      setStatus(reason === 'ended' ? 'Call ended (' + formatDuration(duration) + ')' : 'Call failed: ' + (cause || 'unknown'), reason === 'ended' ? '' : 'error');
+      inCall = false;
+      _incomingJsep = null;
+      localStream = null;
+      remoteStream = null;
+      callStartTime = null;
+    }
+
+    // ─── Incoming Call UI ─────────────────────────────────────────────────────
+    function showIncomingCall(number) {
+      document.getElementById('incomingNumber').textContent = number;
+      document.getElementById('incomingOverlay').classList.add('show');
+    }
+
+    function hideIncomingCall() {
+      document.getElementById('incomingOverlay').classList.remove('show');
+    }
+
+    function answerCall() {
+      if (!sipHandle || !_incomingJsep) return;
+      hideIncomingCall();
+      playRingtone(false);
+      dbg('sip', 'Answering incoming call...');
+      sipHandle.createAnswer({
+        jsep: _incomingJsep,
+        tracks: [{ type: 'audio', capture: true }],
+        success: function (jsep) {
+          sipHandle.send({ message: { request: 'accept' }, jsep: jsep });
+          dbg('sip', 'Sent accept with answer SDP');
+          inCall = true;
+        },
+        error: function (error) {
+          dbg('error', '❌ Failed to create answer', String(error));
+          setStatus('Answer failed: ' + error, 'error');
+        }
+      });
+      setStatus('Answering...', 'info');
+    }
+
+    function rejectCall() {
+      if (!sipHandle) return;
+      sipHandle.send({ message: { request: 'decline', code: 486 } });
+      hideIncomingCall();
+      playRingtone(false);
+      _incomingJsep = null;
+      setStatus('Call rejected', '');
+      dbg('sip', 'Call declined (486 Busy)');
+    }
+
+    // ─── Make / Hangup ────────────────────────────────────────────────────────
+    function makeCall() {
+      if (!sipHandle || !isRegistered) { setStatus('Not registered', 'error'); return; }
+      const callTo = document.getElementById("dialInput").value.trim();
+      const domain = document.getElementById("domain").value.trim();
+      if (!callTo) { setStatus('Enter a number to dial', 'error'); return; }
+      currentCallNumber = callTo;
+      currentCallDirection = 'out';
+      const callUri = 'sip:' + callTo + '@' + domain;
+      dbg('sip', 'Making call to', callUri);
+
+      sipHandle.createOffer({
+        tracks: [{ type: 'audio', capture: true }],
+        success: function (jsep) {
+          sipHandle.send({
+            message: { request: 'call', uri: callUri },
+            jsep: jsep
+          });
+          dbg('sip', 'Call offer sent');
+        },
+        error: function (error) {
+          dbg('error', '❌ Failed to create offer', String(error));
+          setStatus('Call failed: ' + error, 'error');
+        }
+      });
+
+      document.getElementById('callBtn').disabled = true;
+      document.getElementById('hangupBtn').disabled = false;
+      setStatus('Calling ' + callTo + '...', 'info');
+    }
+
+    function hangup() {
+      if (!sipHandle) return;
+      try {
+        sipHandle.send({ message: { request: 'hangup' } });
+        sipHandle.hangup();
+      } catch (e) { }
+      dbg('sip', 'Hangup sent');
+    }
+
+    // ─── Mute / Hold / Transfer / DTMF ────────────────────────────────────────
+    function toggleMute() {
+      if (!sipHandle || !inCall) return;
+      isMuted = !isMuted;
+      if (isMuted) {
+        sipHandle.muteAudio();
+      } else {
+        sipHandle.unmuteAudio();
+      }
+      const btn = document.getElementById('muteBtn');
+      btn.classList.toggle('active', isMuted);
+      btn.querySelector('.label').textContent = isMuted ? 'UNMUTE' : 'MUTE';
+      btn.childNodes[0].textContent = isMuted ? '🔇' : '🎙';
+      setStatus(isMuted ? 'Microphone muted' : 'Microphone active', '');
+      dbg('media', isMuted ? 'Audio muted' : 'Audio unmuted');
+    }
+
+    function toggleHold() {
+      if (!sipHandle || !inCall) return;
+      isOnHold = !isOnHold;
+      if (isOnHold) {
+        sipHandle.send({ message: { request: 'hold' } });
+        dbg('sip', 'Hold request sent');
+      } else {
+        sipHandle.send({ message: { request: 'unhold' } });
+        dbg('sip', 'Unhold request sent');
+      }
+      const btn = document.getElementById('holdBtn');
+      btn.classList.toggle('active', isOnHold);
+      btn.querySelector('.label').textContent = isOnHold ? 'RESUME' : 'HOLD';
+      setStatus(isOnHold ? 'Call on hold' : 'Call resumed', '');
+    }
+
+    function transferPrompt() {
+      const target = prompt('Transfer to (number):');
+      if (!target || !sipHandle || !inCall) return;
+      const domain = document.getElementById("domain").value.trim();
+      const transferUri = 'sip:' + target + '@' + domain;
+      try {
+        sipHandle.send({ message: { request: 'transfer', uri: transferUri } });
+        setStatus('Transferring to ' + target + '...', 'info');
+        dbg('sip', 'Transfer (REFER) sent', transferUri);
+      } catch (e) {
+        setStatus('Transfer failed: ' + e.message, 'error');
+        dbg('error', 'Transfer failed', e.message);
+      }
+    }
+
+    function sendDTMF() {
+      const tone = prompt('Enter DTMF tone(s):');
+      if (!tone || !sipHandle || !inCall) return;
+      try {
+        for (const digit of tone) {
+          sipHandle.send({ message: { request: 'dtmf_info', digit: digit } });
+        }
+        setStatus('DTMF sent: ' + tone, '');
+        dbg('sip', 'DTMF sent via SIP INFO', tone);
+      } catch (e) {
+        setStatus('DTMF failed', 'error');
+        dbg('error', 'DTMF send error', e.message);
+      }
+    }
+
+    // ─── Timer ────────────────────────────────────────────────────────────────
+    function startTimer() {
+      callStartTime = Date.now();
+      const timerEl = document.getElementById('callTimer');
+      timerEl.style.display = 'block';
+      timerInterval = setInterval(() => {
+        timerEl.textContent = formatDuration(getElapsedSeconds());
+      }, 1000);
+    }
+
+    function stopTimer() {
+      if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+      document.getElementById('callTimer').style.display = 'none';
+    }
+
+    function getElapsedSeconds() {
+      return callStartTime ? Math.floor((Date.now() - callStartTime) / 1000) : 0;
+    }
+
+    function formatDuration(s) {
+      const m = Math.floor(s / 60);
+      const sec = s % 60;
+      return String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+    }
+
+    // ─── Ringtone ─────────────────────────────────────────────────────────────
+    function playRingtone(play) {
+      if (play) {
+        try {
+          if (!window._ringCtx) {
+            window._ringCtx = new AudioContext();
+            window._ringGain = window._ringCtx.createGain();
+            window._ringGain.connect(window._ringCtx.destination);
+          }
+          window._ringing = true;
+          ringLoop();
+        } catch (e) { }
+      } else {
+        window._ringing = false;
+      }
+    }
+
+    function ringLoop() {
+      if (!window._ringing) return;
+      const ctx = window._ringCtx;
+      const gain = window._ringGain;
+      function beep(freq, start, dur) {
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.connect(g); g.connect(gain);
+        osc.frequency.value = freq;
+        g.gain.setValueAtTime(0.15, ctx.currentTime + start);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+        osc.start(ctx.currentTime + start);
+        osc.stop(ctx.currentTime + start + dur + 0.05);
+      }
+      beep(440, 0, 0.3); beep(480, 0, 0.3); beep(440, 0.4, 0.3); beep(480, 0.4, 0.3);
+      setTimeout(() => { if (window._ringing) ringLoop(); }, 3000);
+    }
+
+    // ─── DTMF Tones (shared AudioContext) ─────────────────────────────────────
+    function playTone(key) {
+      try {
+        const ctx = getDtmfCtx();
+        const freqs = { '1': [697, 1209], '2': [697, 1336], '3': [697, 1477], '4': [770, 1209], '5': [770, 1336], '6': [770, 1477], '7': [852, 1209], '8': [852, 1336], '9': [852, 1477], '*': [941, 1209], '0': [941, 1336], '#': [941, 1477] };
+        const pair = freqs[key];
+        if (!pair) return;
+        pair.forEach(f => {
+          const osc = ctx.createOscillator();
+          const g = ctx.createGain();
+          osc.connect(g); g.connect(ctx.destination);
+          osc.frequency.value = f;
+          g.gain.setValueAtTime(0.08, ctx.currentTime);
+          g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+          osc.start(); osc.stop(ctx.currentTime + 0.13);
+        });
+      } catch (e) { }
+    }
+
+    // ─── Recording ────────────────────────────────────────────────────────────
+    function toggleRecording() {
+      if (!isRecording) startRecording(); else stopRecording();
+    }
+
+    function startRecording() {
+      if (!remoteStream) { setStatus('No audio stream to record', 'error'); return; }
+      recordedChunks = [];
+      const audioCtx = new AudioContext();
+      const destination = audioCtx.createMediaStreamDestination();
+      const remoteSource = audioCtx.createMediaStreamSource(remoteStream);
+      remoteSource.connect(destination);
+      if (localStream) {
+        const localSource = audioCtx.createMediaStreamSource(localStream);
+        localSource.connect(destination);
+      }
+      const mimeType = getSupportedMimeType();
+      const options = mimeType ? { mimeType } : {};
+      mediaRecorder = new MediaRecorder(destination.stream, options);
+      mediaRecorder.ondataavailable = (e) => { if (e.data?.size > 0) recordedChunks.push(e.data); };
+      mediaRecorder.onstop = () => saveRecording(mimeType);
+      mediaRecorder.start(100);
+      isRecording = true;
+      const btn = document.getElementById('recordBtn');
+      btn.classList.add('recording');
+      document.getElementById('recordLabel').textContent = 'Stop Recording';
+      setStatus('Recording...', 'info');
+    }
+
+    function stopRecording() {
+      if (mediaRecorder?.state !== 'inactive') mediaRecorder.stop();
+      isRecording = false;
+      const btn = document.getElementById('recordBtn');
+      btn.classList.remove('recording');
+      document.getElementById('recordLabel').textContent = 'Record Call';
+    }
+
+    function saveRecording(mimeType) {
+      const ext = mimeType?.includes('ogg') ? 'ogg' : mimeType?.includes('mp4') ? 'mp4' : 'webm';
+      const blob = new Blob(recordedChunks, { type: mimeType || 'audio/webm' });
+      const url = URL.createObjectURL(blob);
+      recordingCount++;
+      const now = new Date();
+      const timestamp = now.toLocaleTimeString().replace(/:/g, '');
+      const filename = `call-${currentCallNumber}-${timestamp}.${ext}`;
+      const list = document.getElementById('recordingsList');
+      if (recordingCount === 1) list.innerHTML = '';
+      const item = document.createElement('div');
+      item.className = 'rec-item';
+      item.innerHTML = `
+        <div class="rec-item-header">
+          <span class="rec-number">📞 ${currentCallNumber || 'Unknown'}</span>
+          <span class="rec-meta">${now.toLocaleTimeString()}</span>
+        </div>
+        <audio controls src="${url}"></audio>
+        <div class="rec-item-actions">
+          <a class="btn-dl" href="${url}" download="${filename}">⬇ Download</a>
+        </div>`;
+      list.prepend(item);
+      const badge = document.getElementById('recCount');
+      badge.style.display = 'flex';
+      badge.textContent = recordingCount;
+      setStatus('Recording saved — check Recorded tab', 'success');
+    }
+
+    function getSupportedMimeType() {
+      const types = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4'];
+      return types.find(t => MediaRecorder.isTypeSupported(t)) || '';
+    }
+
+    // ─── Call History ─────────────────────────────────────────────────────────
+    function addHistory(entry) {
+      callHistory.unshift(entry);
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const list = document.getElementById('historyList');
+      if (callHistory.length === 0) { list.innerHTML = '<div class="empty-state">No call history yet</div>'; return; }
+      list.innerHTML = '';
+      callHistory.slice(0, 50).forEach(h => {
+        const icon = h.reason === 'failed' ? 'missed' : h.direction;
+        const emoji = h.reason === 'failed' ? '↘' : h.direction === 'out' ? '↗' : '↙';
+        const item = document.createElement('div');
+        item.className = 'history-item';
+        item.innerHTML = `
+          <div class="history-icon ${icon}">${emoji}</div>
+          <div class="history-info">
+            <div class="history-number">${escHtml(h.number)}</div>
+            <div class="history-meta">
+              <span>${h.time.toLocaleTimeString()}</span>
+              <span>${h.reason === 'failed' ? 'missed' : formatDuration(h.duration)}</span>
+            </div>
+          </div>
+          <button class="history-recall" onclick="recallNumber('${escHtml(h.number)}')" title="Call back">📞</button>`;
+        list.appendChild(item);
+      });
+    }
+
+    function recallNumber(number) {
+      document.getElementById('dialInput').value = number;
+      updateDisplay();
+      switchTab('dialpad-tab', document.querySelectorAll('.tab')[0]);
+      setStatus('Ready to call ' + number, '');
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // ── DEBUG ENGINE ──────────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════
+
+    let _logEntries = [];
+    let _logCounter = 0;
+
+    const TAG_LABELS = {
+      info: 'INFO', success: 'OK', error: 'ERR', warn: 'WARN',
+      ws: 'WS', sip: 'SIP', ice: 'ICE', media: 'MEDIA', dim: '···'
+    };
+
+    function dbg(level, message, detail = '') {
+      const now = new Date();
+      const time = now.toTimeString().split(' ')[0] + '.' + String(now.getMilliseconds()).padStart(3, '0');
+      const full = detail ? message + ' → ' + detail : message;
+      _logEntries.push({ level, time, message: full });
+      _logCounter++;
+      const log = document.getElementById('debugLog');
+      const entry = document.createElement('div');
+      entry.className = 'log-entry ' + level;
+      entry.innerHTML =
+        `<span class="log-time">${time}</span>` +
+        `<span class="log-tag">${TAG_LABELS[level] || level.toUpperCase()}</span>` +
+        `<span class="log-msg">${escHtml(full)}</span>`;
+      log.appendChild(entry);
+      log.scrollTop = log.scrollHeight;
+      document.getElementById('logCount').textContent = _logCounter + ' entries';
+      document.getElementById('debugTime').textContent = time;
+      const fn = level === 'error' ? console.error : level === 'warn' ? console.warn : console.log;
+      fn(`[${level.toUpperCase()}] ${full}`);
+    }
+
+    function escHtml(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function clearLogs() {
+      _logEntries = []; _logCounter = 0;
+      document.getElementById('debugLog').innerHTML = '';
+      document.getElementById('logCount').textContent = '0 entries';
+      dbg('dim', 'Log cleared');
+    }
+
+    function copyLogs() {
+      const text = _logEntries.map(e => `[${e.time}] [${e.level.toUpperCase()}] ${e.message}`).join('\n');
+      navigator.clipboard.writeText(text).then(() => {
+        dbg('success', 'Logs copied to clipboard (' + _logEntries.length + ' lines)');
+      }).catch(() => {
+        dbg('warn', 'Clipboard failed — run: copy(window._debugLogs) in console');
+        window._debugLogs = text;
+      });
+    }
+
+    // ── WSS Quick Tester ──────────────────────────────────────────────
+    function testWSS() {
+      const wssInput = document.getElementById('wss').value.trim();
+      const domain = document.getElementById('domain').value.trim();
+      const candidates = [
+        wssInput,
+        'wss://' + domain + ':8989',
+        'ws://' + domain + ':8989',
+        'wss://' + domain + ':8088',
+        'ws://' + domain + ':8088',
+        'wss://' + domain + ':8188',
+        'wss://' + domain + ':443',
+      ].filter((v, i, a) => v && a.indexOf(v) === i);
+
+      dbg('info', '── WSS Probe started ──', candidates.length + ' URLs to test');
+      let foundWorking = false;
+
+      candidates.forEach((url, idx) => {
+        setTimeout(() => {
+          dbg('ws', 'Testing', url);
+          try {
+            const ws = new WebSocket(url, 'janus-protocol');
+            const t = setTimeout(() => { ws.close(); dbg('warn', 'Timeout (6s)', url); }, 6000);
+            ws.onopen = () => {
+              clearTimeout(t);
+              dbg('success', '✅ WebSocket OPEN', url);
+              if (!foundWorking) {
+                foundWorking = true;
+                dbg('success', '🎯 WORKING URL FOUND: ' + url);
+                document.getElementById('wss').value = url;
+                setStatus('Working WebSocket found: ' + url, 'success');
+              }
+              ws.close();
+            };
+            ws.onerror = () => { clearTimeout(t); dbg('error', '❌ WebSocket failed', url); };
+            ws.onclose = (e) => {
+              if (e.code === 1000) {
+                dbg('dim', 'WS closed normally', url);
+              } else if (e.code === 1006) {
+                dbg('warn', 'WS closed abnormally (1006)', url + ' — server unreachable, refused, or SSL issue');
+              } else {
+                dbg('dim', 'WS closed code=' + e.code + ' reason=' + (e.reason || 'none'), url);
+              }
+            };
+          } catch (e) {
+            dbg('error', 'WebSocket exception: ' + e.message, url);
+          }
+        }, idx * 800);
+      });
+    }
+
+    // ── Startup ───────────────────────────────────────────────────────
+    dbg('dim', '══ Softphone Debug Console ready ══');
+    dbg('dim', 'Engine: Janus WebRTC Gateway (SIP Plugin)');
+
+    const _initialWss = document.getElementById('wss').value.trim();
+    if (_initialWss.startsWith('ws://')) {
+      document.getElementById('sslBanner').classList.remove('show');
+    }
+    dbg('info', 'Browser', navigator.userAgent.split(') ')[0].split('(')[1]);
+    dbg('info', 'Page origin', location.origin);
+
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+      dbg('error', '⚠ Page not on HTTPS — microphone & WebRTC may be BLOCKED');
+      dbg('warn', 'Serve via https:// or localhost for full functionality');
+    } else {
+      dbg('success', 'Protocol: ' + location.protocol + ' ✅');
+    }
+
+    navigator.permissions?.query({ name: 'microphone' }).then(r => {
+      const level = r.state === 'granted' ? 'success' : r.state === 'denied' ? 'error' : 'warn';
+      dbg(level, 'Microphone permission: ' + r.state);
+      r.addEventListener('change', () => dbg('info', 'Microphone permission changed → ' + r.state));
+    }).catch(() => dbg('dim', 'Microphone permission API not available'));
+
+    if (window.RTCPeerConnection) dbg('success', 'RTCPeerConnection: supported ✅');
+    else dbg('error', '❌ RTCPeerConnection not supported');
+
+    if (window.WebSocket) dbg('success', 'WebSocket: supported ✅');
+    else dbg('error', '❌ WebSocket not supported');
+
+    dbg('info', 'Server', document.getElementById('domain').value + ' via Janus SIP Plugin');
+
+    setInterval(() => {
+      document.getElementById('debugTime').textContent = new Date().toTimeString().split(' ')[0];
+    }, 1000);
+  </script>
+</body>
+
+</html>
