@@ -1,0 +1,1877 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Softphone</title>
+  <script src="jssip.min.js"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0e0f14;
+      --surface: #16181f;
+      --surface2: #1e2029;
+      --surface3: #262830;
+      --border: #2e3040;
+      --accent: #4f8ef7;
+      --accent2: #6c63ff;
+      --green: #22c55e;
+      --red: #ef4444;
+      --amber: #f59e0b;
+      --text: #e8eaf0;
+      --text2: #8b90a0;
+      --text3: #555a6e;
+      --radius-sm: 8px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background-image:
+        radial-gradient(ellipse at 20% 20%, rgba(79, 142, 247, 0.06) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 80%, rgba(108, 99, 255, 0.06) 0%, transparent 60%);
+    }
+
+    .shell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .phone {
+      width: 360px;
+      background: var(--surface);
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      box-shadow: 0 32px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.03);
+    }
+
+    .header {
+      padding: 18px 20px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+    }
+
+    .brand {
+      font-weight: 600;
+      font-size: 15px;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text3);
+      transition: all 0.3s;
+    }
+
+    .brand-dot.connected {
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+    }
+
+    .brand-dot.connecting {
+      background: var(--amber);
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0.3
+      }
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-8px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    @keyframes ringPulse {
+
+      0%,
+      100% {
+        transform: scale(1)
+      }
+
+      50% {
+        transform: scale(1.05)
+      }
+    }
+
+    @keyframes timerTick {
+      from {
+        opacity: 0.7
+      }
+
+      to {
+        opacity: 1
+      }
+    }
+
+    .reg-badge {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--text3);
+      padding: 3px 8px;
+      background: var(--surface3);
+      border-radius: 20px;
+    }
+
+    .reg-badge.ok {
+      color: var(--green);
+    }
+
+    .reg-badge.fail {
+      color: var(--red);
+    }
+
+    .config-toggle {
+      width: 100%;
+      padding: 10px 20px;
+      background: none;
+      border: none;
+      border-bottom: 1px solid var(--border);
+      color: var(--text2);
+      font-size: 12px;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: color 0.2s;
+    }
+
+    .config-toggle:hover {
+      color: var(--text);
+    }
+
+    .config-toggle span {
+      font-size: 10px;
+    }
+
+    .config-panel {
+      display: none;
+      padding: 16px 20px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      animation: slideDown 0.2s ease;
+    }
+
+    .config-panel.open {
+      display: block;
+    }
+
+    .field {
+      margin-bottom: 10px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 11px;
+      color: var(--text3);
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .field input {
+      width: 100%;
+      padding: 8px 10px;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-size: 13px;
+      font-family: 'DM Mono', monospace;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .field input:focus {
+      border-color: var(--accent);
+    }
+
+    .btn-connect {
+      width: 100%;
+      padding: 9px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 4px;
+      font-family: 'DM Sans', sans-serif;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    .btn-connect:hover {
+      opacity: 0.9;
+    }
+
+    .btn-connect:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .btn-connect:active {
+      transform: scale(0.98);
+    }
+
+    .display {
+      padding: 20px 20px 12px;
+      min-height: 80px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .number-display {
+      font-family: 'DM Mono', monospace;
+      font-size: 28px;
+      font-weight: 300;
+      color: var(--text);
+      letter-spacing: 2px;
+      min-height: 38px;
+      display: flex;
+      align-items: center;
+    }
+
+    .number-display.placeholder {
+      color: var(--text3);
+      font-size: 16px;
+      letter-spacing: 0;
+    }
+
+    .call-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .call-status-text {
+      font-size: 12px;
+      color: var(--text2);
+    }
+
+    .call-timer {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--green);
+      display: none;
+      animation: timerTick 1s infinite alternate;
+    }
+
+    .call-direction {
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 20px;
+      font-weight: 600;
+      display: none;
+    }
+
+    .call-direction.outgoing {
+      background: rgba(79, 142, 247, 0.15);
+      color: var(--accent);
+    }
+
+    .call-direction.incoming {
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--green);
+    }
+
+    .dialpad {
+      padding: 0 16px 16px;
+    }
+
+    .dialpad-input-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .dialpad-input {
+      flex: 1;
+      min-width: 0;
+      padding: 10px 12px;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 16px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .dialpad-input:focus {
+      border-color: var(--accent);
+    }
+
+    .btn-backspace {
+      padding: 10px 14px;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text2);
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.15s;
+    }
+
+    .btn-backspace:hover {
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    .keys {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .key {
+      aspect-ratio: 1.3;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 500;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.1s;
+      user-select: none;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .key sub {
+      font-size: 8px;
+      letter-spacing: 1.5px;
+      color: var(--text3);
+      font-weight: 400;
+      line-height: 1;
+      margin-top: 2px;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .key:hover {
+      background: var(--surface3);
+      border-color: #3a3d50;
+      transform: translateY(-1px);
+    }
+
+    .key:active {
+      transform: scale(0.95);
+      background: var(--surface);
+    }
+
+    .actions {
+      padding: 0 16px 16px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .action-btn {
+      aspect-ratio: 1;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text2);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      gap: 3px;
+      transition: all 0.15s;
+    }
+
+    .action-btn span.label {
+      font-size: 9px;
+      font-family: 'DM Mono', monospace;
+      letter-spacing: 0.5px;
+      color: var(--text3);
+    }
+
+    .action-btn:hover:not(:disabled) {
+      background: var(--surface3);
+      color: var(--text);
+    }
+
+    .action-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .action-btn.active {
+      background: rgba(79, 142, 247, 0.15);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .record-row {
+      padding: 0 16px 16px;
+    }
+
+    .btn-record {
+      width: 100%;
+      padding: 9px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text2);
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.15s;
+    }
+
+    .btn-record:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .btn-record.recording {
+      background: rgba(239, 68, 68, 0.12);
+      border-color: var(--red);
+      color: var(--red);
+    }
+
+    .rec-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .btn-record.recording .rec-dot {
+      animation: blink 0.8s infinite;
+    }
+
+    .call-row {
+      padding: 0 16px 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .btn-call {
+      padding: 14px;
+      border-radius: 50px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .btn-call:active {
+      transform: scale(0.96);
+    }
+
+    .btn-call:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-dial {
+      background: linear-gradient(135deg, var(--green), #16a34a);
+      color: white;
+      box-shadow: 0 4px 20px rgba(34, 197, 94, 0.3);
+    }
+
+    .btn-hangup {
+      background: linear-gradient(135deg, var(--red), #dc2626);
+      color: white;
+      box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3);
+    }
+
+    .tabs {
+      display: flex;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+    }
+
+    .tab {
+      flex: 1;
+      padding: 10px 6px;
+      background: none;
+      border: none;
+      color: var(--text3);
+      font-size: 11px;
+      font-family: 'DM Mono', monospace;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      transition: color 0.2s;
+      position: relative;
+    }
+
+    .tab .tab-icon {
+      font-size: 16px;
+    }
+
+    .tab.active {
+      color: var(--accent);
+    }
+
+    .tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 20%;
+      right: 20%;
+      height: 2px;
+      background: var(--accent);
+      border-radius: 2px 2px 0 0;
+    }
+
+    .tab-count {
+      position: absolute;
+      top: 6px;
+      right: 12px;
+      background: var(--red);
+      color: white;
+      font-size: 9px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    .history-list,
+    .recordings-list {
+      max-height: 220px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--surface3) transparent;
+    }
+
+    .history-item,
+    .recording-item {
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid var(--border);
+      animation: slideDown 0.2s ease;
+    }
+
+    .history-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      background: rgba(79, 142, 247, 0.12);
+      color: var(--accent);
+      flex: 0 0 auto;
+    }
+
+    .history-details {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .history-number {
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .history-time {
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 2px;
+    }
+
+    .recording-item {
+      align-items: stretch;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .recording-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .recording-name {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .recording-meta {
+      flex: 0 0 auto;
+      font-size: 10px;
+      color: var(--text3);
+    }
+
+    .recording-item audio {
+      width: 100%;
+      height: 30px;
+    }
+
+    .recording-download {
+      align-self: flex-start;
+      padding: 5px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface3);
+      color: var(--text2);
+      font-size: 11px;
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+
+    .recording-download:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    .empty-state {
+      padding: 24px;
+      text-align: center;
+      color: var(--text3);
+      font-size: 12px;
+    }
+
+    .status-bar {
+      padding: 10px 20px;
+      background: var(--surface2);
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text2);
+      text-align: center;
+      min-height: 36px;
+    }
+
+    .status-bar.success {
+      color: var(--green);
+    }
+
+    .status-bar.error {
+      color: var(--red);
+    }
+
+    .status-bar.info {
+      color: var(--accent);
+    }
+
+    .status-bar.warn {
+      color: var(--amber);
+    }
+
+    .volume-row {
+      padding: 0 20px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .volume-label {
+      color: var(--text3);
+      font-size: 14px;
+    }
+
+    .volume-slider {
+      flex: 1;
+      accent-color: var(--accent);
+      height: 4px;
+    }
+
+    .incoming-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(14, 15, 20, 0.86);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+      backdrop-filter: blur(8px);
+    }
+
+    .incoming-overlay.show {
+      display: flex;
+    }
+
+    .incoming-card {
+      width: 300px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 28px 22px;
+      text-align: center;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+      animation: ringPulse 1.4s infinite;
+    }
+
+    .incoming-avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 34px;
+      margin: 0 auto 16px;
+    }
+
+    .incoming-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      color: var(--text3);
+      font-family: 'DM Mono', monospace;
+      letter-spacing: 0.8px;
+      margin-bottom: 6px;
+    }
+
+    .incoming-number {
+      font-family: 'DM Mono', monospace;
+      font-size: 20px;
+      color: var(--text);
+      margin-bottom: 20px;
+    }
+
+    .incoming-actions {
+      display: flex;
+      justify-content: center;
+      gap: 18px;
+    }
+
+    .btn-answer,
+    .btn-reject {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      color: white;
+      font-size: 22px;
+    }
+
+    .btn-answer {
+      background: var(--green);
+    }
+
+    .btn-reject {
+      background: var(--red);
+    }
+
+    .debug-wrap {
+      width: 720px;
+      max-width: calc(100vw - 40px);
+      margin-top: 16px;
+      background: #0a0b10;
+      border: 1px solid #1e2235;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+    }
+
+    .debug-header {
+      padding: 10px 14px;
+      background: #111320;
+      border-bottom: 1px solid #1e2235;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .debug-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-family: 'DM Mono', monospace;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .debug-blink {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: blink 1.2s infinite;
+    }
+
+    .debug-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .debug-btn {
+      padding: 5px 9px;
+      background: #1a1d28;
+      border: 1px solid #252a3d;
+      border-radius: 6px;
+      color: var(--text2);
+      font-size: 10px;
+      font-family: 'DM Mono', monospace;
+      cursor: pointer;
+    }
+
+    .debug-log {
+      height: 260px;
+      overflow-y: auto;
+      padding: 8px 0;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .log-entry {
+      display: flex;
+      gap: 8px;
+      padding: 3px 12px;
+      border-left: 2px solid transparent;
+    }
+
+    .log-time {
+      color: #3a3f55;
+      flex: 0 0 64px;
+    }
+
+    .log-tag {
+      flex: 0 0 58px;
+      text-align: center;
+      border-radius: 4px;
+      font-size: 9px;
+      height: 16px;
+      line-height: 16px;
+      text-transform: uppercase;
+    }
+
+    .log-msg {
+      color: var(--text2);
+      overflow-wrap: anywhere;
+      min-width: 0;
+    }
+
+    .log-entry.info .log-tag {
+      background: rgba(79, 142, 247, 0.15);
+      color: var(--accent);
+    }
+
+    .log-entry.success .log-tag {
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--green);
+    }
+
+    .log-entry.error .log-tag {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--red);
+    }
+
+    .log-entry.warn .log-tag {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--amber);
+    }
+
+    .log-entry.ws .log-tag {
+      background: rgba(6, 182, 212, 0.15);
+      color: #06b6d4;
+    }
+
+    .log-entry.sip .log-tag {
+      background: rgba(236, 72, 153, 0.15);
+      color: #ec4899;
+    }
+
+    .log-entry.ice .log-tag {
+      background: rgba(168, 85, 247, 0.15);
+      color: #a855f7;
+    }
+
+    .log-entry.dim .log-tag {
+      background: #1a1d28;
+      color: #555a6e;
+    }
+
+    .debug-footer {
+      padding: 6px 14px;
+      background: #111320;
+      border-top: 1px solid #1e2235;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: #3a3f55;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    #logCount {
+      color: #4f8ef7;
+    }
+
+    @media (max-width: 780px) {
+      body {
+        align-items: flex-start;
+        padding: 12px;
+      }
+
+      .phone {
+        width: min(360px, calc(100vw - 24px));
+      }
+
+      .debug-wrap {
+        width: min(720px, calc(100vw - 24px));
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="shell">
+    <div class="incoming-overlay" id="incomingOverlay">
+      <div class="incoming-card">
+        <div class="incoming-avatar">📞</div>
+        <div class="incoming-label">Incoming Call</div>
+        <div class="incoming-number" id="incomingNumber">Unknown</div>
+        <div class="incoming-actions">
+          <button class="btn-answer" onclick="answerCall()" title="Answer">📲</button>
+          <button class="btn-reject" onclick="rejectCall()" title="Reject">📵</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="phone">
+      <div class="header">
+        <div class="brand">
+          <div class="brand-dot" id="connDot"></div>
+          Softphone
+        </div>
+        <div class="reg-badge" id="regBadge">Unregistered</div>
+      </div>
+
+      <button class="config-toggle" onclick="toggleConfig()">
+        ⚙ Connection Settings
+        <span id="configArrow">▼</span>
+      </button>
+
+      <div class="config-panel" id="configPanel">
+        <div class="field">
+          <label>SIP Username</label>
+          <input id="username" value="1001" autocomplete="off">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input id="password" type="password" value="Webrtc1001!">
+        </div>
+        <div class="field">
+          <label>Domain</label>
+          <input id="domain" value="webrtc.sptm.online">
+        </div>
+        <div class="field">
+          <label>WSS URL</label>
+          <input id="wss" value="wss://webrtc.sptm.online:8089/ws">
+        </div>
+        <div class="field">
+          <label>STUN Server</label>
+          <input id="stun" value="stun:stun.l.google.com:19302">
+        </div>
+        <button class="btn-connect" id="connectBtn" onclick="toggleConnection()">Connect</button>
+      </div>
+
+      <div class="display">
+        <div class="number-display" id="numberDisplay">
+          <span class="placeholder" id="displayPlaceholder">Enter number...</span>
+        </div>
+        <div class="call-info">
+          <div class="call-direction" id="callDirection"></div>
+          <div class="call-status-text" id="callStatusText"></div>
+          <div class="call-timer" id="callTimer">00:00</div>
+        </div>
+      </div>
+
+      <div class="dialpad">
+        <div class="dialpad-input-row">
+          <input class="dialpad-input" id="dialInput" value="1002" placeholder="Number to dial"
+            onkeydown="handleDialKey(event)" oninput="updateDisplay()">
+          <button class="btn-backspace" onclick="backspace()">⌫</button>
+        </div>
+        <div class="keys">
+          <button class="key" onclick="pressKey('1')">1<sub></sub></button>
+          <button class="key" onclick="pressKey('2')">2<sub>ABC</sub></button>
+          <button class="key" onclick="pressKey('3')">3<sub>DEF</sub></button>
+          <button class="key" onclick="pressKey('4')">4<sub>GHI</sub></button>
+          <button class="key" onclick="pressKey('5')">5<sub>JKL</sub></button>
+          <button class="key" onclick="pressKey('6')">6<sub>MNO</sub></button>
+          <button class="key" onclick="pressKey('7')">7<sub>PQRS</sub></button>
+          <button class="key" onclick="pressKey('8')">8<sub>TUV</sub></button>
+          <button class="key" onclick="pressKey('9')">9<sub>WXYZ</sub></button>
+          <button class="key" onclick="pressKey('*')">*</button>
+          <button class="key" onclick="pressKey('0')">0<sub>+</sub></button>
+          <button class="key" onclick="pressKey('#')">#</button>
+        </div>
+      </div>
+
+      <div class="volume-row">
+        <span class="volume-label">🔊</span>
+        <input type="range" class="volume-slider" id="volumeSlider" min="0" max="1" step="0.05" value="1"
+          oninput="setVolume(this.value)">
+      </div>
+
+      <div class="actions">
+        <button class="action-btn" id="muteBtn" onclick="toggleMute()" disabled>
+          🎙<span class="label">MUTE</span>
+        </button>
+        <button class="action-btn" id="holdBtn" onclick="toggleHold()" disabled>
+          ⏸<span class="label">HOLD</span>
+        </button>
+        <button class="action-btn" id="xferBtn" onclick="transferPrompt()" disabled>
+          ↗<span class="label">XFER</span>
+        </button>
+        <button class="action-btn" id="dtmfBtn" onclick="sendDTMF()" disabled>
+          ⌨<span class="label">DTMF</span>
+        </button>
+      </div>
+
+      <div class="record-row">
+        <button class="btn-record" id="recordBtn" onclick="toggleRecording()" disabled>
+          <span class="rec-dot"></span>
+          <span id="recordLabel">Record Call</span>
+        </button>
+      </div>
+
+      <div class="call-row">
+        <button class="btn-call btn-dial" id="callBtn" onclick="makeCall()" disabled>
+          📞 Call
+        </button>
+        <button class="btn-call btn-hangup" id="hangupBtn" onclick="hangup()" disabled>
+          📵 End
+        </button>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('dialpad-tab', this)">
+          <span class="tab-icon">📞</span>Dial
+        </button>
+        <button class="tab" onclick="switchTab('history-tab', this)">
+          <span class="tab-icon">🕐</span>History
+          <div class="tab-count" id="historyCount"></div>
+        </button>
+        <button class="tab" onclick="switchTab('recordings-tab', this)">
+          <span class="tab-icon">🔴</span>Recorded
+          <div class="tab-count" id="recCount"></div>
+        </button>
+      </div>
+
+      <div class="tab-panel active" id="dialpad-tab"></div>
+      <div class="tab-panel" id="history-tab">
+        <div class="history-list" id="historyList">
+          <div class="empty-state">No call history yet</div>
+        </div>
+      </div>
+      <div class="tab-panel" id="recordings-tab">
+        <div class="recordings-list" id="recordingsList">
+          <div class="empty-state">No recordings yet</div>
+        </div>
+      </div>
+
+      <div class="status-bar" id="statusBar">Ready</div>
+    </div>
+
+    <audio id="remoteAudio" autoplay playsinline></audio>
+  </div>
+
+  <div class="debug-wrap">
+    <div class="debug-header">
+      <div class="debug-title">
+        <div class="debug-blink"></div>
+        Debug Console
+      </div>
+      <div class="debug-actions">
+        <button class="debug-btn" onclick="testWSS()">Test WSS</button>
+        <button class="debug-btn" onclick="copyLogs()">Copy</button>
+        <button class="debug-btn" onclick="clearLogs()">Clear</button>
+      </div>
+    </div>
+    <div class="debug-log" id="debugLog"></div>
+    <div class="debug-footer">
+      <span id="logCount">0 entries</span>
+      <span id="debugTime">--:--:--</span>
+    </div>
+  </div>
+
+  <script>
+    let ua = null;
+    let session = null;
+    let isConnected = false;
+    let isRegistered = false;
+    let isMuted = false;
+    let isOnHold = false;
+    let localStream = null;
+    let remoteStream = null;
+    let callStartTime = null;
+    let timerInterval = null;
+    let callHistory = [];
+    let logEntries = [];
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let recordingsList = [];
+    let recordingCount = 0;
+    let recorderAudioContext = null;
+    let recorderSources = [];
+    let currentRecordingMimeType = '';
+
+    const dtmfFreqs = {
+      '1': [697, 1209], '2': [697, 1336], '3': [697, 1477],
+      '4': [770, 1209], '5': [770, 1336], '6': [770, 1477],
+      '7': [852, 1209], '8': [852, 1336], '9': [852, 1477],
+      '*': [941, 1209], '0': [941, 1336], '#': [941, 1477]
+    };
+
+    let _dtmfCtx = null;
+    function getDtmfCtx() {
+      if (!_dtmfCtx) _dtmfCtx = new AudioContext();
+      return _dtmfCtx;
+    }
+
+    function setStatus(msg, type = '') {
+      const bar = document.getElementById('statusBar');
+      bar.textContent = msg;
+      bar.className = 'status-bar' + (type ? ' ' + type : '');
+    }
+
+    function dbg(type, tag, detail = '') {
+      const now = new Date();
+      const time = now.toLocaleTimeString('en-US', { hour12: false });
+      const entry = { time, type, tag, detail };
+      logEntries.push(entry);
+      const line = document.createElement('div');
+      line.className = 'log-entry ' + type;
+      line.innerHTML =
+        '<span class="log-time">' + time + '</span>' +
+        '<span class="log-tag">' + type + '</span>' +
+        '<span class="log-msg">' + escapeHtml(tag + (detail ? ' ' + detail : '')) + '</span>';
+      const log = document.getElementById('debugLog');
+      log.appendChild(line);
+      log.scrollTop = log.scrollHeight;
+      document.getElementById('logCount').textContent = logEntries.length + ' entries';
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[c]));
+    }
+
+    function clearLogs() {
+      logEntries = [];
+      document.getElementById('debugLog').innerHTML = '';
+      document.getElementById('logCount').textContent = '0 entries';
+    }
+
+    function copyLogs() {
+      const text = logEntries.map(e => `[${e.time}] ${e.type.toUpperCase()} ${e.tag} ${e.detail}`).join('\n');
+      navigator.clipboard.writeText(text).then(() => dbg('success', 'Logs copied'));
+    }
+
+    function updateDebugTime() {
+      document.getElementById('debugTime').textContent = new Date().toLocaleTimeString('en-US', { hour12: false });
+    }
+    setInterval(updateDebugTime, 1000);
+    updateDebugTime();
+
+    function toggleConfig() {
+      const panel = document.getElementById('configPanel');
+      const arrow = document.getElementById('configArrow');
+      panel.classList.toggle('open');
+      arrow.textContent = panel.classList.contains('open') ? '▲' : '▼';
+    }
+
+    function switchTab(id, btn) {
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    function updateDisplay() {
+      const val = document.getElementById('dialInput').value;
+      const nd = document.getElementById('numberDisplay');
+      if (val) {
+        nd.textContent = val;
+        nd.classList.remove('placeholder');
+      } else {
+        nd.innerHTML = '<span class="placeholder" id="displayPlaceholder">Enter number...</span>';
+        nd.classList.add('placeholder');
+      }
+    }
+
+    function pressKey(k) {
+      const input = document.getElementById('dialInput');
+      input.value += k;
+      updateDisplay();
+      if (session && session.isEstablished()) {
+        try {
+          session.sendDTMF(k);
+          dbg('sip', 'DTMF sent', k);
+        } catch (error) {
+          dbg('error', 'DTMF failed', error.message);
+        }
+      }
+      playTone(k);
+    }
+
+    function playTone(k) {
+      const freqs = dtmfFreqs[k];
+      if (!freqs) return;
+      const ctx = getDtmfCtx();
+      const gain = ctx.createGain();
+      gain.gain.value = 0.08;
+      gain.connect(ctx.destination);
+      freqs.forEach(freq => {
+        const osc = ctx.createOscillator();
+        osc.frequency.value = freq;
+        osc.type = 'sine';
+        osc.connect(gain);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.11);
+      });
+    }
+
+    function backspace() {
+      const input = document.getElementById('dialInput');
+      input.value = input.value.slice(0, -1);
+      updateDisplay();
+    }
+
+    function handleDialKey(e) {
+      if (e.key === 'Enter') makeCall();
+    }
+
+    function setVolume(v) {
+      document.getElementById('remoteAudio').volume = v;
+      document.querySelector('.volume-label').textContent = v == 0 ? '🔇' : v < 0.5 ? '🔉' : '🔊';
+    }
+
+    function setRegistrationUI(registered) {
+      isRegistered = registered;
+      const dot = document.getElementById('connDot');
+      const badge = document.getElementById('regBadge');
+      if (registered) {
+        dot.className = 'brand-dot connected';
+        badge.className = 'reg-badge ok';
+        badge.textContent = document.getElementById('username').value.trim();
+      } else {
+        dot.className = isConnected ? 'brand-dot connecting' : 'brand-dot';
+        badge.className = 'reg-badge';
+        badge.textContent = isConnected ? 'Connecting...' : 'Unregistered';
+      }
+      document.getElementById('callBtn').disabled = !registered || Boolean(session);
+    }
+
+    function setCallControls(active) {
+      ['muteBtn', 'holdBtn', 'xferBtn', 'dtmfBtn', 'recordBtn'].forEach(id => {
+        document.getElementById(id).disabled = !active;
+      });
+      document.getElementById('hangupBtn').disabled = !active;
+      document.getElementById('callBtn').disabled = active || !isRegistered;
+    }
+
+    function toggleConnection() {
+      if (ua) disconnect();
+      else connect();
+    }
+
+    function connect() {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const domain = document.getElementById('domain').value.trim();
+      const wssUrl = document.getElementById('wss').value.trim();
+
+      if (!username || !password || !domain || !wssUrl) {
+        setStatus('Fill in all connection fields', 'error');
+        return;
+      }
+
+      document.getElementById('connDot').className = 'brand-dot connecting';
+      document.getElementById('regBadge').textContent = 'Connecting...';
+      document.getElementById('connectBtn').textContent = 'Disconnect';
+      setStatus('Connecting to Asterisk at ' + wssUrl + '...', 'info');
+      dbg('ws', 'Connecting', wssUrl);
+
+      const socket = new JsSIP.WebSocketInterface(wssUrl);
+      ua = new JsSIP.UA({
+        sockets: [socket],
+        uri: 'sip:' + username + '@' + domain,
+        authorization_user: username,
+        password: password,
+        display_name: username,
+        register: true,
+        session_timers: false,
+        contact_uri: 'sip:' + username + '@' + domain + ';transport=ws'
+      });
+
+      ua.on('connected', () => {
+        isConnected = true;
+        dbg('ws', 'WebSocket connected');
+        setStatus('WebSocket connected, registering...', 'info');
+      });
+
+      ua.on('disconnected', () => {
+        dbg('warn', 'WebSocket disconnected');
+        isConnected = false;
+        setRegistrationUI(false);
+        if (!session) setStatus('Disconnected', 'warn');
+      });
+
+      ua.on('registered', () => {
+        dbg('success', 'Registered');
+        setStatus('Registered as ' + username + '@' + domain, 'success');
+        setRegistrationUI(true);
+      });
+
+      ua.on('registrationFailed', event => {
+        dbg('error', 'Registration failed', event.cause || '');
+        setStatus('Registration failed: ' + (event.cause || 'unknown'), 'error');
+        setRegistrationUI(false);
+      });
+
+      ua.on('newRTCSession', event => {
+        if (session && event.session !== session) {
+          event.session.terminate();
+          return;
+        }
+        bindSession(event.session, event.originator);
+      });
+
+      ua.start();
+    }
+
+    function disconnect() {
+      stopRecording(true);
+      if (session) session.terminate();
+      if (ua) ua.stop();
+      ua = null;
+      session = null;
+      isConnected = false;
+      isRegistered = false;
+      document.getElementById('connectBtn').textContent = 'Connect';
+      document.getElementById('incomingOverlay').classList.remove('show');
+      setRegistrationUI(false);
+      setCallControls(false);
+      stopTimer();
+      setStatus('Disconnected', 'warn');
+      dbg('info', 'Disconnected');
+    }
+
+    function makeTargetUri(value) {
+      const target = value.trim();
+      if (!target) return '';
+      if (target.startsWith('sip:')) return target;
+      return 'sip:' + target + '@' + document.getElementById('domain').value.trim();
+    }
+
+    function makeCall() {
+      if (!ua || !isRegistered) return;
+      const target = makeTargetUri(document.getElementById('dialInput').value);
+      if (!target) {
+        setStatus('Enter number to dial', 'error');
+        return;
+      }
+      dbg('sip', 'Calling', target);
+      setStatus('Calling ' + target + '...', 'info');
+      ua.call(target, sessionOptions());
+      markDirection('OUT', 'outgoing');
+      setCallControls(true);
+    }
+
+    function sessionOptions() {
+      const stun = document.getElementById('stun').value.trim();
+      return {
+        mediaConstraints: { audio: true, video: false },
+        pcConfig: { iceServers: stun ? [{ urls: stun }] : [] }
+      };
+    }
+
+    function bindSession(rtcSession, originator) {
+      session = rtcSession;
+      attachRemoteAudio(rtcSession);
+      setCallControls(true);
+
+      rtcSession.on('peerconnection', () => attachRemoteAudio(rtcSession));
+      rtcSession.on('progress', () => {
+        dbg('sip', 'Call progress');
+        setStatus('Call progress...', 'info');
+      });
+      rtcSession.on('accepted', () => {
+        dbg('sip', 'Call accepted');
+        setStatus('Call accepted', 'success');
+        document.getElementById('incomingOverlay').classList.remove('show');
+        startTimer();
+      });
+      rtcSession.on('confirmed', () => {
+        dbg('sip', 'Call confirmed');
+        setStatus('In call', 'success');
+        startTimer();
+      });
+      rtcSession.on('ended', event => {
+        dbg('sip', 'Call ended', event.cause || '');
+        addHistory(event.cause || 'ended');
+        cleanupSession();
+      });
+      rtcSession.on('failed', event => {
+        dbg('error', 'Call failed', event.cause || '');
+        addHistory(event.cause || 'failed');
+        cleanupSession();
+      });
+      rtcSession.on('getusermediafailed', event => {
+        dbg('error', 'Microphone access failed', event.error && event.error.message ? event.error.message : '');
+      });
+
+      if (originator === 'remote') {
+        const remoteUri = rtcSession.remote_identity && rtcSession.remote_identity.uri
+          ? rtcSession.remote_identity.uri.toString()
+          : 'unknown';
+        const remoteNumber = remoteUri.replace(/^sip:/, '').replace(/@.*$/, '');
+        document.getElementById('incomingNumber').textContent = remoteNumber;
+        document.getElementById('incomingOverlay').classList.add('show');
+        document.getElementById('dialInput').value = remoteNumber;
+        updateDisplay();
+        markDirection('IN', 'incoming');
+        setStatus('Incoming call from ' + remoteNumber, 'info');
+        dbg('sip', 'Incoming call', remoteUri);
+      }
+    }
+
+    function attachRemoteAudio(rtcSession) {
+      const pc = rtcSession.connection;
+      if (!pc) return;
+      pc.addEventListener('track', event => {
+        const stream = event.streams && event.streams[0];
+        if (stream) {
+          remoteStream = stream;
+          document.getElementById('remoteAudio').srcObject = stream;
+          document.getElementById('remoteAudio').play().catch(error => {
+            dbg('warn', 'Remote audio play blocked', error.message);
+          });
+        }
+      });
+      pc.addEventListener('iceconnectionstatechange', () => {
+        dbg('ice', 'ICE state', pc.iceConnectionState);
+      });
+    }
+
+    function answerCall() {
+      if (!session) return;
+      dbg('sip', 'Answering call');
+      setStatus('Answering...', 'info');
+      document.getElementById('incomingOverlay').classList.remove('show');
+      session.answer(sessionOptions());
+    }
+
+    function rejectCall() {
+      if (session) session.terminate();
+      document.getElementById('incomingOverlay').classList.remove('show');
+    }
+
+    function hangup() {
+      if (session) session.terminate();
+    }
+
+    function cleanupSession() {
+      stopRecording(true);
+      session = null;
+      remoteStream = null;
+      localStream = null;
+      document.getElementById('remoteAudio').srcObject = null;
+      document.getElementById('incomingOverlay').classList.remove('show');
+      setCallControls(false);
+      stopTimer();
+      markDirection('', '');
+      setStatus(isRegistered ? 'Registered' : 'Ready', isRegistered ? 'success' : '');
+    }
+
+    function markDirection(text, cls) {
+      const el = document.getElementById('callDirection');
+      el.textContent = text;
+      el.className = 'call-direction' + (cls ? ' ' + cls : '');
+      el.style.display = text ? 'block' : 'none';
+    }
+
+    function startTimer() {
+      if (timerInterval) return;
+      callStartTime = Date.now();
+      document.getElementById('callTimer').style.display = 'block';
+      timerInterval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - callStartTime) / 1000);
+        const mins = String(Math.floor(elapsed / 60)).padStart(2, '0');
+        const secs = String(elapsed % 60).padStart(2, '0');
+        document.getElementById('callTimer').textContent = mins + ':' + secs;
+      }, 1000);
+    }
+
+    function stopTimer() {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      callStartTime = null;
+      document.getElementById('callTimer').textContent = '00:00';
+      document.getElementById('callTimer').style.display = 'none';
+    }
+
+    function toggleRecording() {
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        stopRecording();
+      } else {
+        startRecording();
+      }
+    }
+
+    function startRecording() {
+      if (!session || !session.connection) {
+        setStatus('No active call to record', 'error');
+        return;
+      }
+      if (!window.MediaRecorder) {
+        setStatus('Recording is not supported in this browser', 'error');
+        dbg('error', 'MediaRecorder unavailable');
+        return;
+      }
+
+      recordedChunks = [];
+      recorderSources = [];
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) {
+        setStatus('Audio recording is not supported in this browser', 'error');
+        dbg('error', 'AudioContext unavailable');
+        return;
+      }
+
+      try {
+        recorderAudioContext = new AudioContextClass();
+        const destination = recorderAudioContext.createMediaStreamDestination();
+        const localAudioStream = getLocalAudioStream();
+        const sources = [
+          { label: 'remote', stream: remoteStream },
+          { label: 'local', stream: localAudioStream }
+        ];
+
+        let mixedTracks = 0;
+        sources.forEach(sourceInfo => {
+          if (!sourceInfo.stream || !sourceInfo.stream.getAudioTracks().length) return;
+          const source = recorderAudioContext.createMediaStreamSource(sourceInfo.stream);
+          source.connect(destination);
+          recorderSources.push(source);
+          mixedTracks += sourceInfo.stream.getAudioTracks().length;
+          dbg('media', 'Recording source attached', sourceInfo.label);
+        });
+
+        if (!mixedTracks) {
+          cleanupRecorderGraph();
+          setStatus('No audio stream to record', 'error');
+          return;
+        }
+
+        currentRecordingMimeType = getSupportedRecordingMimeType();
+        const options = currentRecordingMimeType ? { mimeType: currentRecordingMimeType } : {};
+        mediaRecorder = new MediaRecorder(destination.stream, options);
+        mediaRecorder.ondataavailable = event => {
+          if (event.data && event.data.size > 0) recordedChunks.push(event.data);
+        };
+        mediaRecorder.onerror = event => {
+          const message = event.error && event.error.message ? event.error.message : 'unknown error';
+          dbg('error', 'Recording failed', message);
+          setStatus('Recording failed: ' + message, 'error');
+        };
+        mediaRecorder.onstop = () => {
+          saveRecording();
+          cleanupRecorderGraph();
+        };
+        mediaRecorder.start(1000);
+        document.getElementById('recordBtn').classList.add('recording');
+        document.getElementById('recordLabel').textContent = 'Stop Recording';
+        setStatus('Recording call...', 'info');
+        dbg('media', 'Recording started', currentRecordingMimeType || 'default mime');
+      } catch (error) {
+        cleanupRecorderGraph();
+        mediaRecorder = null;
+        resetRecordingButton();
+        setStatus('Could not start recording: ' + error.message, 'error');
+        dbg('error', 'Could not start recording', error.message);
+      }
+    }
+
+    function stopRecording(silent = false) {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        try {
+          mediaRecorder.stop();
+          if (!silent) setStatus('Saving recording...', 'info');
+          dbg('media', 'Recording stopped');
+        } catch (error) {
+          dbg('error', 'Could not stop recording', error.message);
+          cleanupRecorderGraph();
+        }
+      }
+      resetRecordingButton();
+    }
+
+    function getLocalAudioStream() {
+      if (!session || !session.connection) return null;
+      const stream = new MediaStream();
+      session.connection.getSenders().forEach(sender => {
+        if (sender.track && sender.track.kind === 'audio') stream.addTrack(sender.track);
+      });
+      localStream = stream.getAudioTracks().length ? stream : null;
+      return localStream;
+    }
+
+    function saveRecording() {
+      if (!recordedChunks.length) {
+        dbg('warn', 'Recording had no audio chunks');
+        setStatus('Recording was empty', 'warn');
+        mediaRecorder = null;
+        return;
+      }
+
+      const type = currentRecordingMimeType || 'audio/webm';
+      const blob = new Blob(recordedChunks, { type });
+      const url = URL.createObjectURL(blob);
+      const now = new Date();
+      const number = document.getElementById('dialInput').value || 'unknown';
+      const extension = recordingExtension(type);
+      const filename = 'call-' + sanitizeFilename(number) + '-' + now.toISOString().replace(/[:.]/g, '-') + extension;
+      recordingsList.unshift({
+        url,
+        filename,
+        number,
+        time: now.toLocaleTimeString(),
+        size: blob.size
+      });
+      recordingCount = recordingsList.length;
+      renderRecordings();
+      setStatus('Recording saved in Recorded tab', 'success');
+      dbg('success', 'Recording saved', filename);
+      mediaRecorder = null;
+    }
+
+    function renderRecordings() {
+      const list = document.getElementById('recordingsList');
+      const count = document.getElementById('recCount');
+      if (!recordingsList.length) {
+        list.innerHTML = '<div class="empty-state">No recordings yet</div>';
+        count.style.display = 'none';
+        return;
+      }
+      list.innerHTML = recordingsList.map(item => `
+        <div class="recording-item">
+          <div class="recording-header">
+            <div class="recording-name">${escapeHtml(item.number)}</div>
+            <div class="recording-meta">${escapeHtml(item.time)} · ${formatBytes(item.size)}</div>
+          </div>
+          <audio controls src="${item.url}"></audio>
+          <a class="recording-download" href="${item.url}" download="${escapeHtml(item.filename)}">Download</a>
+        </div>
+      `).join('');
+      count.textContent = recordingCount;
+      count.style.display = 'flex';
+    }
+
+    function resetRecordingButton() {
+      document.getElementById('recordBtn').classList.remove('recording');
+      document.getElementById('recordLabel').textContent = 'Record Call';
+    }
+
+    function cleanupRecorderGraph() {
+      recorderSources.forEach(source => {
+        try { source.disconnect(); } catch (error) { }
+      });
+      recorderSources = [];
+      if (recorderAudioContext) {
+        recorderAudioContext.close().catch(() => { });
+        recorderAudioContext = null;
+      }
+    }
+
+    function getSupportedRecordingMimeType() {
+      const types = [
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/ogg;codecs=opus',
+        'audio/mp4',
+        'video/webm;codecs=opus',
+        'video/webm'
+      ];
+      return types.find(type => MediaRecorder.isTypeSupported(type)) || '';
+    }
+
+    function recordingExtension(type) {
+      if (type.includes('ogg')) return '.ogg';
+      if (type.includes('mp4')) return '.m4a';
+      return '.webm';
+    }
+
+    function sanitizeFilename(value) {
+      return String(value || 'unknown').replace(/[^a-z0-9_-]+/gi, '-').replace(/^-+|-+$/g, '') || 'unknown';
+    }
+
+    function formatBytes(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return Math.round(bytes / 1024) + ' KB';
+      return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+    }
+
+    function addHistory(result) {
+      const number = document.getElementById('dialInput').value || 'Unknown';
+      callHistory.unshift({ number, result, time: new Date().toLocaleTimeString() });
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const list = document.getElementById('historyList');
+      const count = document.getElementById('historyCount');
+      if (!callHistory.length) {
+        list.innerHTML = '<div class="empty-state">No call history yet</div>';
+        count.style.display = 'none';
+        return;
+      }
+      list.innerHTML = callHistory.map(item => `
+        <div class="history-item">
+          <div class="history-icon">📞</div>
+          <div class="history-details">
+            <div class="history-number">${escapeHtml(item.number)}</div>
+            <div class="history-time">${escapeHtml(item.result)} · ${escapeHtml(item.time)}</div>
+          </div>
+        </div>
+      `).join('');
+      count.textContent = callHistory.length;
+      count.style.display = 'flex';
+    }
+
+    function toggleMute() {
+      if (!session || !session.connection) return;
+      isMuted = !isMuted;
+      session.connection.getSenders().forEach(sender => {
+        if (sender.track && sender.track.kind === 'audio') sender.track.enabled = !isMuted;
+      });
+      document.getElementById('muteBtn').classList.toggle('active', isMuted);
+      dbg('info', isMuted ? 'Muted' : 'Unmuted');
+    }
+
+    function toggleHold() {
+      isOnHold = !isOnHold;
+      document.getElementById('holdBtn').classList.toggle('active', isOnHold);
+      dbg('warn', 'Hold is local UI only for this Asterisk test client');
+    }
+
+    function transferPrompt() {
+      dbg('warn', 'Transfer is not implemented in the Asterisk test client');
+    }
+
+    function sendDTMF() {
+      const digit = prompt('DTMF digit');
+      if (digit) pressKey(digit[0]);
+    }
+
+    function testWSS() {
+      const url = document.getElementById('wss').value.trim();
+      dbg('ws', 'Testing SIP WebSocket', url);
+      const ws = new WebSocket(url, 'sip');
+      const timeout = setTimeout(() => {
+        dbg('warn', 'WSS test timeout');
+        ws.close();
+      }, 4000);
+      ws.onopen = () => {
+        clearTimeout(timeout);
+        dbg('success', 'WSS SIP protocol accepted');
+        ws.close();
+      };
+      ws.onerror = () => {
+        clearTimeout(timeout);
+        dbg('error', 'WSS test failed');
+      };
+    }
+
+    updateDisplay();
+    dbg('dim', 'JsSIP Asterisk client ready');
+  </script>
+</body>
+
+</html>
