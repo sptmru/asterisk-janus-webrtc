@@ -4,7 +4,7 @@ services:
     container_name: janus-softphone
     restart: unless-stopped
     ports:
-      - "9669:80"
+      - "${SOFTPHONE_HTTP_PORT:-9669}:80"
 
   asterisk:
     build: ./asterisk
@@ -12,15 +12,18 @@ services:
     restart: unless-stopped
     networks:
       voice_net:
-        ipv4_address: 172.30.0.10
+        ipv4_address: ${ASTERISK_CONTAINER_IP:-172.30.0.10}
     ports:
-      - "5060:5060/udp"
-      - "5060:5060/tcp"
-      - "8088:8088/tcp"
-      - "8089:8089/tcp"
-      - "10000-10100:10000-10100/udp"
+      - "${ASTERISK_SIP_PORT:-5060}:5060/udp"
+      - "${ASTERISK_SIP_PORT:-5060}:5060/tcp"
+      - "${ASTERISK_HTTP_PORT:-8088}:8088/tcp"
+      - "${ASTERISK_WSS_PORT:-8089}:8089/tcp"
+      - "${ASTERISK_RTP_PORT_START:-10000}-${ASTERISK_RTP_PORT_END:-10100}:${ASTERISK_RTP_PORT_START:-10000}-${ASTERISK_RTP_PORT_END:-10100}/udp"
     volumes:
-      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - ${LETSENCRYPT_PATH:-/etc/letsencrypt}:/etc/letsencrypt:ro
+      - ./deploy/generated/asterisk/pjsip.conf:/etc/asterisk/pjsip.conf:ro
+      - ./deploy/generated/asterisk/http.conf:/etc/asterisk/http.conf:ro
+      - ./deploy/generated/asterisk/rtp.conf:/etc/asterisk/rtp.conf:ro
       - asterisk_logs:/var/log/asterisk
 
   fail2ban:
@@ -34,7 +37,7 @@ services:
     depends_on:
       - asterisk
     environment:
-      TZ: UTC
+      TZ: ${TZ:-UTC}
       F2B_LOG_TARGET: STDOUT
       F2B_LOG_LEVEL: INFO
     volumes:
@@ -48,26 +51,26 @@ services:
     depends_on:
       - asterisk
     ports:
-      - "8188:8188/tcp"
-      - "8989:8989/tcp"
-      - "20000-20100:20000-20100/udp"
+      - "${JANUS_WS_PORT:-8188}:8188/tcp"
+      - "${JANUS_WSS_PORT:-8989}:8989/tcp"
+      - "${JANUS_RTP_PORT_START:-20000}-${JANUS_RTP_PORT_END:-20100}:${JANUS_RTP_PORT_START:-20000}-${JANUS_RTP_PORT_END:-20100}/udp"
     extra_hosts:
-      - "webrtc.sptm.online:172.30.0.10"
+      - "${PUBLIC_DOMAIN:-webrtc.example.com}:${ASTERISK_CONTAINER_IP:-172.30.0.10}"
     networks:
       voice_net:
-        ipv4_address: 172.30.0.20
+        ipv4_address: ${JANUS_CONTAINER_IP:-172.30.0.20}
     volumes:
-      - ./janus/config/janus.jcfg:/usr/local/etc/janus/janus.jcfg:ro
-      - ./janus/config/janus.transport.websockets.jcfg:/usr/local/etc/janus/janus.transport.websockets.jcfg:ro
-      - ./janus/config/janus.plugin.sip.jcfg:/usr/local/etc/janus/janus.plugin.sip.jcfg:ro
-      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - ./deploy/generated/janus/janus.jcfg:/usr/local/etc/janus/janus.jcfg:ro
+      - ./deploy/generated/janus/janus.transport.websockets.jcfg:/usr/local/etc/janus/janus.transport.websockets.jcfg:ro
+      - ./deploy/generated/janus/janus.plugin.sip.jcfg:/usr/local/etc/janus/janus.plugin.sip.jcfg:ro
+      - ${LETSENCRYPT_PATH:-/etc/letsencrypt}:/etc/letsencrypt:ro
 
 networks:
   voice_net:
     driver: bridge
     ipam:
       config:
-        - subnet: 172.30.0.0/24
+        - subnet: ${VOICE_SUBNET:-172.30.0.0/24}
 
 volumes:
   asterisk_logs:
