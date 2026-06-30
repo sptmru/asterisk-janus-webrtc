@@ -7,9 +7,6 @@
   <title>Softphone</title>
   <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
   <script src="janus.js"></script>
-  <link
-    href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap"
-    rel="stylesheet">
   <style>
     :root {
       --bg: #0e0f14;
@@ -38,7 +35,7 @@
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: 'DM Sans', sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       min-height: 100vh;
       display: flex;
       align-items: center;
@@ -152,7 +149,7 @@
     }
 
     .reg-badge {
-      font-family: 'DM Mono', monospace;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
       font-size: 11px;
       color: var(--text3);
       padding: 3px 8px;
@@ -216,7 +213,7 @@
       font-size: 12px;
       font-weight: 700;
       cursor: pointer;
-      font-family: 'DM Sans', sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       letter-spacing: 0.3px;
       transition: opacity 0.2s;
       display: flex;
@@ -239,7 +236,7 @@
       font-size: 11px;
       font-weight: 600;
       cursor: pointer;
-      font-family: 'DM Sans', sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       margin-top: 6px;
       transition: background 0.2s;
     }
@@ -257,7 +254,7 @@
       border-bottom: 1px solid var(--border);
       color: var(--text2);
       font-size: 12px;
-      font-family: 'DM Sans', sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -296,7 +293,7 @@
       margin-bottom: 4px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      font-family: 'DM Mono', monospace;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
     }
 
     .field input {
@@ -307,7 +304,7 @@
       border-radius: var(--radius-sm);
       color: var(--text);
       font-size: 13px;
-      font-family: 'DM Mono', monospace;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
       outline: none;
       transition: border-color 0.2s;
     }
@@ -327,7 +324,7 @@
       font-weight: 600;
       cursor: pointer;
       margin-top: 4px;
-      font-family: 'DM Sans', sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       transition: opacity 0.2s, transform 0.1s;
     }
 
@@ -349,7 +346,7 @@
     }
 
     .number-display {
-      font-family: 'DM Mono', monospace;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
       font-size: 28px;
       font-weight: 300;
       color: var(--text);
@@ -378,7 +375,7 @@
     }
 
     .call-timer {
-      font-family: 'DM Mono', monospace;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
       font-size: 12px;
       color: var(--green);
       display: none;
@@ -421,7 +418,7 @@
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
       color: var(--text);
-      font-family: 'DM Mono', monospace;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
       font-size: 16px;
       outline: none;
       transition: border-color 0.2s;
@@ -466,7 +463,7 @@
       justify-content: center;
       font-size: 18px;
       font-weight: 500;
-      font-family: 'DM Sans', sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       transition: all 0.1s;
       user-select: none;
       position: relative;
@@ -480,7 +477,7 @@
       font-weight: 400;
       line-height: 1;
       margin-top: 2px;
-      font-family: 'DM Mono', monospace;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
     }
 
     .key:hover {
@@ -533,7 +530,7 @@
 
     .action-btn span.label {
       font-size: 9px;
-      font-family: 'DM Mono', monospace;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
       letter-spacing: 0.5px;
       color: var(--text3);
     }
@@ -586,7 +583,7 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
-      font-family: 'DM Sans', sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       font-weight: 600;
       font-size: 14px;
     }
@@ -634,7 +631,7 @@
       background: var(--surface2);
       color: var(--text2);
       font-size: 13px;
-      font-family: 'DM Sans', sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -685,7 +682,7 @@
       border: none;
       color: var(--text3);
       font-size: 11px;
-      font-family: 'DM Mono', monospace;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
       cursor: pointer;
       display: flex;
       flex-direction: column;
@@ -794,7 +791,7 @@
     }
 
     .history-number {
-      font-family: 'DM Mono', monospace;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
       font-size: 13px;
       font-weight: 500;
       white-space: nowrap;
@@ -863,7 +860,7 @@
     }
 
     .rec-number {
-      font-family: 'DM Mono', monospace;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
       font-size: 12px;
       font-weight: 500;
     }
@@ -897,7 +894,7 @@
       text-align: center;
       transition: all 0.15s;
       display: block;
-      font-family: 'DM Sans', sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
 
     .btn-dl:hover {
@@ -912,7 +909,7 @@
       background: var(--surface2);
       border-top: 1px solid var(--border);
       font-size: 11px;
-      font-family: 'DM Mono', monospace;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
       color: var(--text3);
       min-height: 34px;
       display: flex;
@@ -977,12 +974,12 @@
       color: var(--text3);
       text-transform: uppercase;
       letter-spacing: 1px;
-      font-family: 'DM Mono', monospace;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
       margin-bottom: 4px;
     }
 
     .incoming-number {
-      font-family: 'DM Mono', monospace;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
       font-size: 22px;
       font-weight: 500;
       color: var(--text);
@@ -1096,7 +1093,7 @@
     }
 
     .debug-title {
-      font-family: 'DM Mono', monospace;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
       font-size: 11px;
       color: #4f8ef7;
       letter-spacing: 1px;
@@ -1126,7 +1123,7 @@
       border-radius: 6px;
       color: #8b90a0;
       font-size: 10px;
-      font-family: 'DM Mono', monospace;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
       cursor: pointer;
       transition: all 0.15s;
     }
@@ -1146,7 +1143,7 @@
 
     .log-entry {
       padding: 3px 14px;
-      font-family: 'DM Mono', monospace;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
       font-size: 11px;
       line-height: 1.6;
       display: flex;
@@ -1304,7 +1301,7 @@
       padding: 6px 14px;
       background: #111320;
       border-top: 1px solid #1e2235;
-      font-family: 'DM Mono', monospace;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
       font-size: 10px;
       color: #3a3f55;
       display: flex;
@@ -1346,21 +1343,15 @@
 
       <!-- ✅ SSL Trust Banner (shown when cert not trusted) -->
       <div class="ssl-banner" id="sslBanner">
-        <div class="ssl-banner-title">⚠️ SSL Certificate Not Trusted</div>
+        <div class="ssl-banner-title">TLS connection failed</div>
         <div class="ssl-banner-text">
-          Your browser is blocking the WebSocket because the server uses a self-signed certificate.
-          You need to trust it once in your browser.
-        </div>
-        <div class="ssl-banner-steps">
-          1. Click the button below to open the server URL<br>
-          2. Click <strong>"Advanced"</strong> → <strong>"Proceed anyway"</strong><br>
-          3. Come back here and click <strong>"I've Trusted It"</strong>
+          The browser could not establish a trusted secure WebSocket connection. Check the WSS URL and certificate.
         </div>
         <button class="btn-trust" id="btnOpenCert" onclick="openCertPage()">
-          🔓 Open Certificate Page
+          Open WSS Origin
         </button>
         <button class="btn-trust-done" onclick="hideSslBanner()">
-          ✅ I've Trusted It — Try Again
+          Retry Connection
         </button>
       </div>
 
@@ -1374,23 +1365,24 @@
       <div class="config-panel" id="configPanel">
         <div class="field">
           <label>SIP Username</label>
-          <input id="username" value="caliberfocus1_sip.in" autocomplete="off">
+          <input id="username" value="" autocomplete="username" placeholder="extension">
         </div>
         <div class="field">
           <label>Password</label>
-          <input id="password" type="password" value="CaL!Ber@#$101">
+          <input id="password" type="password" value="" autocomplete="current-password" placeholder="password">
         </div>
         <div class="field">
           <label>Domain</label>
-          <input id="domain" value="cloudpbx.siplink.in">
+          <input id="domain" value="" autocomplete="off" placeholder="pbx.example.com">
         </div>
         <div class="field">
           <label>WSS URL</label>
-          <input id="wss" value="wss://cloudpbx.siplink.in:8989">
+          <input id="wss" value="" autocomplete="off" placeholder="wss://pbx.example.com:8989">
         </div>
         <div class="field">
           <label>STUN Server</label>
-          <input id="stun" value="stun:stun.l.google.com:19302">
+          <input id="stun" value="stun:stun.l.google.com:19302" autocomplete="off"
+            placeholder="stun:stun.example.com:3478">
         </div>
         <button class="btn-connect" id="connectBtn" onclick="toggleConnection()">Connect</button>
       </div>
@@ -1540,6 +1532,7 @@
     let inCall = false;
     let mediaRecorder = null;
     let recordedChunks = [];
+    let recordingAudioContext = null;
     let localStream = null;
     let remoteStream = null;
     let callStartTime = null;
@@ -1547,10 +1540,17 @@
     let callHistory = [];
     let recordingsList = [];
     let recordingCount = 0;
+    let recordingConsentConfirmed = false;
     let currentCallNumber = '';
     let currentCallDirection = '';
     let _incomingJsep = null;
     let _janusInitialized = false;
+    const DEBUG_ENABLED = new URLSearchParams(location.search).get('debug') === '1';
+    const CREDENTIALS_STORAGE_KEY = 'janusSoftphoneCredentials';
+
+    if (!DEBUG_ENABLED) {
+      document.querySelector('.debug-wrap')?.remove();
+    }
 
     // Shared AudioContext for DTMF tones (avoids leak)
     let _dtmfCtx = null;
@@ -1566,8 +1566,8 @@
       const wssUrl = document.getElementById('wss').value.trim();
       const httpsUrl = wssUrl.replace('wss://', 'https://');
       document.getElementById('btnOpenCert').dataset.url = httpsUrl;
-      dbg('warn', '⚠ SSL cert not trusted — showing trust banner');
-      dbg('warn', 'Open this URL in browser and accept the cert: ' + httpsUrl);
+      dbg('warn', 'TLS connection failed');
+      dbg('warn', 'Check WSS certificate and endpoint: ' + httpsUrl);
     }
 
     function hideSslBanner() {
@@ -1583,6 +1583,57 @@
         || document.getElementById('wss').value.trim().replace('wss://', 'https://');
       dbg('info', 'Opening cert page: ' + url);
       window.open(url, '_blank');
+    }
+
+    function isSafeSipPart(value) {
+      return /^[A-Za-z0-9_.!~*'()%+\-]+$/.test(value);
+    }
+
+    function validateDialString(value) {
+      return /^[0-9*#+]{1,32}$/.test(value);
+    }
+
+    function resetConnectingUI() {
+      document.getElementById('connDot').className = 'brand-dot';
+      document.getElementById('regBadge').textContent = 'Unregistered';
+    }
+
+    function getCredentialsFromForm() {
+      return {
+        username: document.getElementById("username").value.trim(),
+        password: document.getElementById("password").value,
+        domain: document.getElementById("domain").value.trim(),
+        wssUrl: document.getElementById("wss").value.trim(),
+        stun: document.getElementById("stun").value.trim()
+      };
+    }
+
+    function loadSavedCredentials() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(CREDENTIALS_STORAGE_KEY) || '{}');
+        if (!saved || typeof saved !== 'object') return;
+        const fields = {
+          username: 'username',
+          password: 'password',
+          domain: 'domain',
+          wssUrl: 'wss',
+          stun: 'stun'
+        };
+        Object.entries(fields).forEach(([key, id]) => {
+          if (typeof saved[key] === 'string') {
+            document.getElementById(id).value = saved[key];
+          }
+        });
+        if (typeof saved.iceServers === 'string' && !saved.stun) {
+          document.getElementById('stun').value = saved.iceServers.split(',')[0].trim();
+        }
+      } catch (e) {
+        localStorage.removeItem(CREDENTIALS_STORAGE_KEY);
+      }
+    }
+
+    function saveCredentials(credentials) {
+      localStorage.setItem(CREDENTIALS_STORAGE_KEY, JSON.stringify(credentials));
     }
 
     // ─── UI Helpers ───────────────────────────────────────────────────────────
@@ -1609,12 +1660,16 @@
     function updateDisplay() {
       const val = document.getElementById('dialInput').value;
       const nd = document.getElementById('numberDisplay');
+      nd.textContent = '';
       if (val) {
-        nd.innerHTML = '';
         nd.appendChild(document.createTextNode(val));
         nd.classList.remove('placeholder');
       } else {
-        nd.innerHTML = '<span class="placeholder" id="displayPlaceholder">Enter number...</span>';
+        const placeholder = document.createElement('span');
+        placeholder.className = 'placeholder';
+        placeholder.id = 'displayPlaceholder';
+        placeholder.textContent = 'Enter number...';
+        nd.appendChild(placeholder);
       }
     }
 
@@ -1623,7 +1678,7 @@
       input.value += k;
       updateDisplay();
       if (inCall && sipHandle) {
-        sipHandle.send({ message: { request: 'dtmf_info', digit: k } });
+        if (validateDialString(k)) sipHandle.send({ message: { request: 'dtmf_info', digit: k } });
       }
       playTone(k);
     }
@@ -1675,16 +1730,23 @@
     }
 
     function connect() {
-      const username = document.getElementById("username").value.trim();
-      const password = document.getElementById("password").value;
-      const domain = document.getElementById("domain").value.trim();
-      const wssUrl = document.getElementById("wss").value.trim();
-      const stun = document.getElementById("stun").value.trim();
+      const credentials = getCredentialsFromForm();
+      const { username, password, domain, wssUrl } = credentials;
+      const { stun } = credentials;
 
-      if (!username || !domain || !wssUrl) {
+      if (!username || !password || !domain || !wssUrl) {
         setStatus('Fill in all connection fields', 'error');
         return;
       }
+      if (!isSafeSipPart(username)) {
+        setStatus('SIP username contains unsupported characters', 'error');
+        return;
+      }
+      if (!/^wss:\/\/[^/\s]+(?::\d+)?(?:\/[^\s]*)?$/.test(wssUrl)) {
+        setStatus('Use a secure WSS URL', 'error');
+        return;
+      }
+      saveCredentials(credentials);
 
       document.getElementById('connDot').className = 'brand-dot connecting';
       document.getElementById('regBadge').textContent = 'Connecting...';
@@ -1718,28 +1780,25 @@
           if (preCheckDone) return;
           preCheckDone = true;
           clearTimeout(preTimeout);
-          dbg('error', '❌ Pre-flight WSS failed — likely SSL cert not trusted');
+          dbg('error', 'Pre-flight WSS failed');
           showSslBanner();
-          setStatus('SSL certificate not trusted — see banner above', 'error');
-          document.getElementById('connDot').className = 'brand-dot';
-          document.getElementById('regBadge').textContent = 'Unregistered';
+          setStatus('Secure WebSocket connection failed', 'error');
+          resetConnectingUI();
         };
 
         preCheck.onclose = (e) => {
           if (!preCheckDone && e.code === 1006) {
             preCheckDone = true;
             clearTimeout(preTimeout);
-            dbg('error', '❌ WSS closed abnormally (code 1006) — SSL cert likely not trusted');
+            dbg('error', 'WSS closed abnormally (code 1006)');
             showSslBanner();
-            setStatus('SSL certificate not trusted — see banner above', 'error');
-            document.getElementById('connDot').className = 'brand-dot';
-            document.getElementById('regBadge').textContent = 'Unregistered';
+            setStatus('Secure WebSocket connection failed', 'error');
+            resetConnectingUI();
           }
         };
       } else {
-        dbg('ws', 'Using plain ws:// — no SSL check needed');
-        document.getElementById('sslBanner').classList.remove('show');
-        startJanus(username, password, domain, wssUrl, stun);
+        setStatus('Use a secure WSS URL', 'error');
+        resetConnectingUI();
       }
     }
 
@@ -1770,7 +1829,7 @@
             dbg('error', '❌ Janus connection failed', String(error));
             if (String(error).includes('1006') || String(error).includes('unreachable')) {
               showSslBanner();
-              setStatus('Cannot reach Janus server — see banner above', 'error');
+              setStatus('Cannot reach Janus server', 'error');
             } else {
               setStatus('Janus connection failed: ' + error, 'error');
             }
@@ -2033,6 +2092,8 @@
       playRingtone(false);
       const duration = callStartTime ? getElapsedSeconds() : 0;
       if (isRecording) stopRecording();
+      recordingAudioContext?.close().catch(() => { });
+      recordingAudioContext = null;
       stopTimer();
       setCallControls(false);
       document.getElementById('callDirection').style.display = 'none';
@@ -2096,6 +2157,7 @@
       const callTo = document.getElementById("dialInput").value.trim();
       const domain = document.getElementById("domain").value.trim();
       if (!callTo) { setStatus('Enter a number to dial', 'error'); return; }
+      if (!validateDialString(callTo)) { setStatus('Enter a valid phone number', 'error'); return; }
       currentCallNumber = callTo;
       currentCallDirection = 'out';
       const callUri = 'sip:' + callTo + '@' + domain;
@@ -2164,8 +2226,9 @@
     }
 
     function transferPrompt() {
-      const target = prompt('Transfer to (number):');
+      const target = (prompt('Transfer to (number):') || '').trim();
       if (!target || !sipHandle || !inCall) return;
+      if (!validateDialString(target)) { setStatus('Enter a valid transfer target', 'error'); return; }
       const domain = document.getElementById("domain").value.trim();
       const transferUri = 'sip:' + target + '@' + domain;
       try {
@@ -2179,8 +2242,9 @@
     }
 
     function sendDTMF() {
-      const tone = prompt('Enter DTMF tone(s):');
+      const tone = (prompt('Enter DTMF tone(s):') || '').trim();
       if (!tone || !sipHandle || !inCall) return;
+      if (!validateDialString(tone)) { setStatus('Enter valid DTMF digits', 'error'); return; }
       try {
         for (const digit of tone) {
           sipHandle.send({ message: { request: 'dtmf_info', digit: digit } });
@@ -2279,13 +2343,20 @@
 
     function startRecording() {
       if (!remoteStream) { setStatus('No audio stream to record', 'error'); return; }
+      if (!recordingConsentConfirmed) {
+        recordingConsentConfirmed = confirm('Confirm that this call may be recorded.');
+        if (!recordingConsentConfirmed) {
+          setStatus('Recording cancelled', '');
+          return;
+        }
+      }
       recordedChunks = [];
-      const audioCtx = new AudioContext();
-      const destination = audioCtx.createMediaStreamDestination();
-      const remoteSource = audioCtx.createMediaStreamSource(remoteStream);
+      recordingAudioContext = new AudioContext();
+      const destination = recordingAudioContext.createMediaStreamDestination();
+      const remoteSource = recordingAudioContext.createMediaStreamSource(remoteStream);
       remoteSource.connect(destination);
       if (localStream) {
-        const localSource = audioCtx.createMediaStreamSource(localStream);
+        const localSource = recordingAudioContext.createMediaStreamSource(localStream);
         localSource.connect(destination);
       }
       const mimeType = getSupportedMimeType();
@@ -2316,21 +2387,36 @@
       recordingCount++;
       const now = new Date();
       const timestamp = now.toLocaleTimeString().replace(/:/g, '');
-      const filename = `call-${currentCallNumber}-${timestamp}.${ext}`;
+      const safeCallNumber = String(currentCallNumber || 'unknown').replace(/[^A-Za-z0-9_.-]/g, '_');
+      const filename = `call-${safeCallNumber}-${timestamp}.${ext}`;
       const list = document.getElementById('recordingsList');
-      if (recordingCount === 1) list.innerHTML = '';
+      if (recordingCount === 1) list.textContent = '';
       const item = document.createElement('div');
       item.className = 'rec-item';
-      item.innerHTML = `
-        <div class="rec-item-header">
-          <span class="rec-number">📞 ${currentCallNumber || 'Unknown'}</span>
-          <span class="rec-meta">${now.toLocaleTimeString()}</span>
-        </div>
-        <audio controls src="${url}"></audio>
-        <div class="rec-item-actions">
-          <a class="btn-dl" href="${url}" download="${filename}">⬇ Download</a>
-        </div>`;
+      const header = document.createElement('div');
+      header.className = 'rec-item-header';
+      const number = document.createElement('span');
+      number.className = 'rec-number';
+      number.textContent = 'Call ' + (currentCallNumber || 'Unknown');
+      const meta = document.createElement('span');
+      meta.className = 'rec-meta';
+      meta.textContent = now.toLocaleTimeString();
+      header.append(number, meta);
+      const audio = document.createElement('audio');
+      audio.controls = true;
+      audio.src = url;
+      const actions = document.createElement('div');
+      actions.className = 'rec-item-actions';
+      const download = document.createElement('a');
+      download.className = 'btn-dl';
+      download.href = url;
+      download.download = filename;
+      download.textContent = 'Download';
+      actions.appendChild(download);
+      item.append(header, audio, actions);
       list.prepend(item);
+      recordingAudioContext?.close().catch(() => { });
+      recordingAudioContext = null;
       const badge = document.getElementById('recCount');
       badge.style.display = 'flex';
       badge.textContent = recordingCount;
@@ -2350,23 +2436,42 @@
 
     function renderHistory() {
       const list = document.getElementById('historyList');
-      if (callHistory.length === 0) { list.innerHTML = '<div class="empty-state">No call history yet</div>'; return; }
-      list.innerHTML = '';
+      list.textContent = '';
+      if (callHistory.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'empty-state';
+        empty.textContent = 'No call history yet';
+        list.appendChild(empty);
+        return;
+      }
       callHistory.slice(0, 50).forEach(h => {
         const icon = h.reason === 'failed' ? 'missed' : h.direction;
-        const emoji = h.reason === 'failed' ? '↘' : h.direction === 'out' ? '↗' : '↙';
+        const arrow = h.reason === 'failed' ? 'missed' : h.direction === 'out' ? 'out' : 'in';
         const item = document.createElement('div');
         item.className = 'history-item';
-        item.innerHTML = `
-          <div class="history-icon ${icon}">${emoji}</div>
-          <div class="history-info">
-            <div class="history-number">${escHtml(h.number)}</div>
-            <div class="history-meta">
-              <span>${h.time.toLocaleTimeString()}</span>
-              <span>${h.reason === 'failed' ? 'missed' : formatDuration(h.duration)}</span>
-            </div>
-          </div>
-          <button class="history-recall" onclick="recallNumber('${escHtml(h.number)}')" title="Call back">📞</button>`;
+        const iconEl = document.createElement('div');
+        iconEl.className = 'history-icon ' + icon;
+        iconEl.textContent = arrow;
+        const info = document.createElement('div');
+        info.className = 'history-info';
+        const number = document.createElement('div');
+        number.className = 'history-number';
+        number.textContent = h.number;
+        const meta = document.createElement('div');
+        meta.className = 'history-meta';
+        const time = document.createElement('span');
+        time.textContent = h.time.toLocaleTimeString();
+        const duration = document.createElement('span');
+        duration.textContent = h.reason === 'failed' ? 'missed' : formatDuration(h.duration);
+        meta.append(time, duration);
+        info.append(number, meta);
+        const recall = document.createElement('button');
+        recall.className = 'history-recall';
+        recall.type = 'button';
+        recall.title = 'Call back';
+        recall.textContent = 'Call';
+        recall.addEventListener('click', () => recallNumber(h.number));
+        item.append(iconEl, info, recall);
         list.appendChild(item);
       });
     }
@@ -2391,18 +2496,26 @@
     };
 
     function dbg(level, message, detail = '') {
+      if (!DEBUG_ENABLED) return;
       const now = new Date();
       const time = now.toTimeString().split(' ')[0] + '.' + String(now.getMilliseconds()).padStart(3, '0');
       const full = detail ? message + ' → ' + detail : message;
       _logEntries.push({ level, time, message: full });
       _logCounter++;
       const log = document.getElementById('debugLog');
+      if (!log) return;
       const entry = document.createElement('div');
       entry.className = 'log-entry ' + level;
-      entry.innerHTML =
-        `<span class="log-time">${time}</span>` +
-        `<span class="log-tag">${TAG_LABELS[level] || level.toUpperCase()}</span>` +
-        `<span class="log-msg">${escHtml(full)}</span>`;
+      const timeEl = document.createElement('span');
+      timeEl.className = 'log-time';
+      timeEl.textContent = time;
+      const tag = document.createElement('span');
+      tag.className = 'log-tag';
+      tag.textContent = TAG_LABELS[level] || level.toUpperCase();
+      const msg = document.createElement('span');
+      msg.className = 'log-msg';
+      msg.textContent = full;
+      entry.append(timeEl, tag, msg);
       log.appendChild(entry);
       log.scrollTop = log.scrollHeight;
       document.getElementById('logCount').textContent = _logCounter + ' entries';
@@ -2417,8 +2530,10 @@
 
     function clearLogs() {
       _logEntries = []; _logCounter = 0;
-      document.getElementById('debugLog').innerHTML = '';
-      document.getElementById('logCount').textContent = '0 entries';
+      const log = document.getElementById('debugLog');
+      if (log) log.textContent = '';
+      const count = document.getElementById('logCount');
+      if (count) count.textContent = '0 entries';
       dbg('dim', 'Log cleared');
     }
 
@@ -2427,8 +2542,7 @@
       navigator.clipboard.writeText(text).then(() => {
         dbg('success', 'Logs copied to clipboard (' + _logEntries.length + ' lines)');
       }).catch(() => {
-        dbg('warn', 'Clipboard failed — run: copy(window._debugLogs) in console');
-        window._debugLogs = text;
+        dbg('warn', 'Clipboard failed');
       });
     }
 
@@ -2439,9 +2553,7 @@
       const candidates = [
         wssInput,
         'wss://' + domain + ':8989',
-        'ws://' + domain + ':8989',
         'wss://' + domain + ':8088',
-        'ws://' + domain + ':8088',
         'wss://' + domain + ':8188',
         'wss://' + domain + ':443',
       ].filter((v, i, a) => v && a.indexOf(v) === i);
@@ -2484,13 +2596,11 @@
     }
 
     // ── Startup ───────────────────────────────────────────────────────
+    loadSavedCredentials();
+
     dbg('dim', '══ Softphone Debug Console ready ══');
     dbg('dim', 'Engine: Janus WebRTC Gateway (SIP Plugin)');
 
-    const _initialWss = document.getElementById('wss').value.trim();
-    if (_initialWss.startsWith('ws://')) {
-      document.getElementById('sslBanner').classList.remove('show');
-    }
     dbg('info', 'Browser', navigator.userAgent.split(') ')[0].split('(')[1]);
     dbg('info', 'Page origin', location.origin);
 
@@ -2516,7 +2626,8 @@
     dbg('info', 'Server', document.getElementById('domain').value + ' via Janus SIP Plugin');
 
     setInterval(() => {
-      document.getElementById('debugTime').textContent = new Date().toTimeString().split(' ')[0];
+      const debugTime = document.getElementById('debugTime');
+      if (debugTime) debugTime.textContent = new Date().toTimeString().split(' ')[0];
     }, 1000);
   </script>
 </body>
