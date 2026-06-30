@@ -34,7 +34,7 @@ services:
     depends_on:
       - asterisk
     environment:
-      TZ: Asia/Yerevan
+      TZ: UTC
       F2B_LOG_TARGET: STDOUT
       F2B_LOG_LEVEL: INFO
     volumes:
