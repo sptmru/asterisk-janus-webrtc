@@ -21,6 +21,25 @@ services:
       - "10000-10100:10000-10100/udp"
     volumes:
       - /etc/letsencrypt:/etc/letsencrypt:ro
+      - asterisk_logs:/var/log/asterisk
+
+  fail2ban:
+    image: crazymax/fail2ban:latest
+    container_name: janus-fail2ban
+    restart: unless-stopped
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    depends_on:
+      - asterisk
+    environment:
+      TZ: Asia/Yerevan
+      F2B_LOG_TARGET: STDOUT
+      F2B_LOG_LEVEL: INFO
+    volumes:
+      - ./fail2ban:/data
+      - asterisk_logs:/var/log/asterisk:ro
 
   janus:
     image: canyan/janus-gateway:latest
@@ -49,3 +68,6 @@ networks:
     ipam:
       config:
         - subnet: 172.30.0.0/24
+
+volumes:
+  asterisk_logs:
