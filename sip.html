@@ -1055,6 +1055,18 @@
           <label>STUN Server</label>
           <input id="stun" value="stun:stun.l.google.com:19302">
         </div>
+        <div class="field">
+          <label>TURN URL</label>
+          <input id="turnUrl" value="" placeholder="turn:webrtc.example.com:3478?transport=udp">
+        </div>
+        <div class="field">
+          <label>TURN Username</label>
+          <input id="turnUsername" value="" autocomplete="off" placeholder="turn user">
+        </div>
+        <div class="field">
+          <label>TURN Password</label>
+          <input id="turnPassword" type="password" value="" autocomplete="current-password" placeholder="turn password">
+        </div>
         <button class="btn-connect" id="connectBtn" onclick="toggleConnection()">Connect</button>
       </div>
 
@@ -1263,6 +1275,7 @@
       const host = window.location.hostname || 'webrtc.example.com';
       document.getElementById('domain').value = host;
       document.getElementById('wss').value = 'wss://' + host + ':8089/ws';
+      document.getElementById('turnUrl').placeholder = 'turn:' + host + ':3478?transport=udp';
     }
     initDefaultConnectionSettings();
 
@@ -1473,9 +1486,22 @@
 
     function sessionOptions() {
       const stun = document.getElementById('stun').value.trim();
+      const turnUrl = document.getElementById('turnUrl').value.trim();
+      const turnUsername = document.getElementById('turnUsername').value.trim();
+      const turnPassword = document.getElementById('turnPassword').value;
+      const iceServers = [];
+      if (stun) iceServers.push({ urls: stun });
+      if (turnUrl) {
+        const turnServer = { urls: turnUrl };
+        if (turnUsername || turnPassword) {
+          turnServer.username = turnUsername;
+          turnServer.credential = turnPassword;
+        }
+        iceServers.push(turnServer);
+      }
       return {
         mediaConstraints: { audio: true, video: false },
-        pcConfig: { iceServers: stun ? [{ urls: stun }] : [] }
+        pcConfig: { iceServers }
       };
     }
 
