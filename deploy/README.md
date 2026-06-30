@@ -2,6 +2,9 @@
 
 This compose setup is parameterized for a server behind NAT, including Azure VMs.
 
+For the full client-facing deployment and operations guide, see
+`deploy/CLIENT_GUIDE.md`.
+
 ## Configure
 
 1. Copy `.env.example` to `.env`.
