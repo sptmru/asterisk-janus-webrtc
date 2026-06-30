@@ -1384,6 +1384,18 @@
           <input id="stun" value="stun:stun.l.google.com:19302" autocomplete="off"
             placeholder="stun:stun.example.com:3478">
         </div>
+        <div class="field">
+          <label>TURN URL</label>
+          <input id="turnUrl" value="" autocomplete="off" placeholder="turn:turn.example.com:3478?transport=udp">
+        </div>
+        <div class="field">
+          <label>TURN Username</label>
+          <input id="turnUsername" value="" autocomplete="off" placeholder="turn user">
+        </div>
+        <div class="field">
+          <label>TURN Password</label>
+          <input id="turnPassword" type="password" value="" autocomplete="current-password" placeholder="turn password">
+        </div>
         <button class="btn-connect" id="connectBtn" onclick="toggleConnection()">Connect</button>
       </div>
 
@@ -1593,6 +1605,24 @@
       return /^[0-9*#+]{1,32}$/.test(value);
     }
 
+    function isValidTurnUrl(value) {
+      return !value || /^turns?:[^ \t\r\n]+$/i.test(value);
+    }
+
+    function buildIceServers(stun, turnUrl, turnUsername, turnPassword) {
+      const iceServers = [];
+      if (stun) iceServers.push({ urls: stun });
+      if (turnUrl) {
+        const turnServer = { urls: turnUrl };
+        if (turnUsername || turnPassword) {
+          turnServer.username = turnUsername;
+          turnServer.credential = turnPassword;
+        }
+        iceServers.push(turnServer);
+      }
+      return iceServers;
+    }
+
     function resetConnectingUI() {
       document.getElementById('connDot').className = 'brand-dot';
       document.getElementById('regBadge').textContent = 'Unregistered';
@@ -1604,7 +1634,10 @@
         password: document.getElementById("password").value,
         domain: document.getElementById("domain").value.trim(),
         wssUrl: document.getElementById("wss").value.trim(),
-        stun: document.getElementById("stun").value.trim()
+        stun: document.getElementById("stun").value.trim(),
+        turnUrl: document.getElementById("turnUrl").value.trim(),
+        turnUsername: document.getElementById("turnUsername").value.trim(),
+        turnPassword: document.getElementById("turnPassword").value
       };
     }
 
@@ -1617,7 +1650,10 @@
           password: 'password',
           domain: 'domain',
           wssUrl: 'wss',
-          stun: 'stun'
+          stun: 'stun',
+          turnUrl: 'turnUrl',
+          turnUsername: 'turnUsername',
+          turnPassword: 'turnPassword'
         };
         Object.entries(fields).forEach(([key, id]) => {
           if (typeof saved[key] === 'string') {
@@ -1732,7 +1768,7 @@
     function connect() {
       const credentials = getCredentialsFromForm();
       const { username, password, domain, wssUrl } = credentials;
-      const { stun } = credentials;
+      const { stun, turnUrl, turnUsername, turnPassword } = credentials;
 
       if (!username || !password || !domain || !wssUrl) {
         setStatus('Fill in all connection fields', 'error');
@@ -1744,6 +1780,10 @@
       }
       if (!/^wss:\/\/[^/\s]+(?::\d+)?(?:\/[^\s]*)?$/.test(wssUrl)) {
         setStatus('Use a secure WSS URL', 'error');
+        return;
+      }
+      if (!isValidTurnUrl(turnUrl)) {
+        setStatus('Use a valid TURN URL', 'error');
         return;
       }
       saveCredentials(credentials);
@@ -1762,7 +1802,7 @@
           if (!preCheckDone) {
             preCheckDone = true;
             dbg('warn', 'Pre-flight timeout — proceeding with Janus anyway');
-            startJanus(username, password, domain, wssUrl, stun);
+            startJanus(username, password, domain, wssUrl, stun, turnUrl, turnUsername, turnPassword);
           }
         }, 4000);
 
@@ -1773,7 +1813,7 @@
           preCheck.close();
           dbg('success', '✅ Pre-flight WSS OK — cert is trusted');
           document.getElementById('sslBanner').classList.remove('show');
-          startJanus(username, password, domain, wssUrl, stun);
+          startJanus(username, password, domain, wssUrl, stun, turnUrl, turnUsername, turnPassword);
         };
 
         preCheck.onerror = () => {
@@ -1802,12 +1842,12 @@
       }
     }
 
-    function startJanus(username, password, domain, wssUrl, stun) {
+    function startJanus(username, password, domain, wssUrl, stun, turnUrl, turnUsername, turnPassword) {
       const sipUri = 'sip:' + username + '@' + domain;
       dbg('info', 'Connecting with SIP URI', sipUri);
       dbg('ws', 'Janus WebSocket URL', wssUrl);
 
-      const iceServers = stun ? [{ urls: stun }] : [];
+      const iceServers = buildIceServers(stun, turnUrl, turnUsername, turnPassword);
 
       function doInit() {
         janus = new Janus({
