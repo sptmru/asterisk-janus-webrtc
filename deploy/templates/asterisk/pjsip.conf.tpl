@@ -73,7 +73,7 @@ callerid=WebRTC 1001 <1001>
 type=auth
 auth_type=userpass
 username=1001
-password=Webrtc1001!
+password=${WEBRTC_1001_PASSWORD}
 
 [1001]
 type=aor
@@ -90,7 +90,7 @@ callerid=WebRTC 1002 <1002>
 type=auth
 auth_type=userpass
 username=1002
-password=Webrtc1002!
+password=${WEBRTC_1002_PASSWORD}
 
 [1002]
 type=aor
@@ -107,7 +107,7 @@ callerid=Janus 2001 <2001>
 type=auth
 auth_type=userpass
 username=2001
-password=Janus2001!
+password=${JANUS_2001_PASSWORD}
 
 [2001]
 type=aor
@@ -124,7 +124,7 @@ callerid=Janus 2002 <2002>
 type=auth
 auth_type=userpass
 username=2002
-password=Janus2002!
+password=${JANUS_2002_PASSWORD}
 
 [2002]
 type=aor
@@ -141,7 +141,7 @@ callerid=Janus 2003 <2003>
 type=auth
 auth_type=userpass
 username=2003
-password=Janus2003!
+password=${JANUS_2003_PASSWORD}
 
 [2003]
 type=aor
@@ -158,7 +158,7 @@ callerid=Janus 2004 <2004>
 type=auth
 auth_type=userpass
 username=2004
-password=Janus2004!
+password=${JANUS_2004_PASSWORD}
 
 [2004]
 type=aor

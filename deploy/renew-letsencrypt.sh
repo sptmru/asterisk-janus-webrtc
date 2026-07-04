@@ -15,4 +15,4 @@ if [ ! -f "$ENV_FILE" ]; then
 fi
 
 docker compose --env-file "$ENV_FILE" --profile certbot run --rm --service-ports certbot renew
-docker compose --env-file "$ENV_FILE" restart asterisk janus turn
+docker compose --env-file "$ENV_FILE" restart softphone-https asterisk janus turn

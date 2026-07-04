@@ -15,6 +15,7 @@ For the full client-facing deployment and operations guide, see
    - `ASTERISK_LOCAL_NETS` to include the Docker subnet and private Azure/VPN CIDRs.
    - `LETSENCRYPT_EMAIL` to the email used for Let's Encrypt registration.
    - `TURN_USERNAME` and `TURN_PASSWORD` for browser TURN credentials.
+   - `JANUS_ADMIN_SECRET` and SIP user passwords to strong per-deploy values.
 3. Make sure DNS for `PUBLIC_DOMAIN` points to `PUBLIC_IP`.
 
 ## Issue TLS Certificate
@@ -43,6 +44,8 @@ generates configs, and starts the stack:
 ```
 
 Run this again after changing `.env`.
+Config generation fails intentionally if any `replace-with-*` placeholder
+secret is still present.
 
 ## Start
 
@@ -54,7 +57,7 @@ docker compose --env-file .env up -d --build
 
 Allow or forward these ports to the VM:
 
-- TCP `SOFTPHONE_HTTP_PORT`
+- TCP `SOFTPHONE_HTTPS_PORT`
 - UDP/TCP `ASTERISK_SIP_PORT`
 - TCP `ASTERISK_WSS_PORT`
 - TCP `JANUS_WSS_PORT`
@@ -70,3 +73,8 @@ conflicts with Azure/VPN routes.
 
 The TURN service uses host networking and advertises
 `external-ip=PUBLIC_IP/INTERNAL_IP`, which matches an Azure VM behind NAT.
+
+`SOFTPHONE_HTTP_PORT` is bound to `127.0.0.1` for local diagnostics only. The
+production browser entrypoint is the HTTPS reverse proxy on
+`SOFTPHONE_HTTPS_PORT`, using the same Let's Encrypt certificate as the WebRTC
+services.

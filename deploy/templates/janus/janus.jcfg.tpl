@@ -7,7 +7,7 @@ general: {
 
 	log_to_stdout = true
 	debug_level = 4
-	admin_secret = "janusoverlord"
+	admin_secret = "${JANUS_ADMIN_SECRET}"
 }
 
 certificates: {

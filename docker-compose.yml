@@ -4,7 +4,19 @@ services:
     container_name: janus-softphone
     restart: unless-stopped
     ports:
-      - "${SOFTPHONE_HTTP_PORT:-9669}:80"
+      - "127.0.0.1:${SOFTPHONE_HTTP_PORT:-9669}:80"
+
+  softphone-https:
+    image: nginx:1.27.5-alpine
+    container_name: janus-softphone-https
+    restart: unless-stopped
+    depends_on:
+      - janus-softphone
+    ports:
+      - "${SOFTPHONE_HTTPS_PORT:-443}:443/tcp"
+    volumes:
+      - ./deploy/generated/nginx/softphone-https.conf:/etc/nginx/conf.d/default.conf:ro
+      - ${LETSENCRYPT_PATH:-/etc/letsencrypt}:/etc/letsencrypt:ro
 
   asterisk:
     build: ./asterisk
@@ -27,7 +39,7 @@ services:
       - asterisk_logs:/var/log/asterisk
 
   fail2ban:
-    image: crazymax/fail2ban:latest
+    image: crazymax/fail2ban:1.1.0
     container_name: janus-fail2ban
     restart: unless-stopped
     network_mode: host
@@ -45,7 +57,7 @@ services:
       - asterisk_logs:/var/log/asterisk:ro
 
   turn:
-    image: coturn/coturn:latest
+    image: coturn/coturn:4.14.0
     container_name: janus-turn
     restart: unless-stopped
     network_mode: host
@@ -57,7 +69,7 @@ services:
       - /etc/coturn/turnserver.conf
 
   certbot:
-    image: certbot/certbot:latest
+    image: certbot/certbot:v5.6.0
     container_name: janus-certbot
     profiles:
       - certbot
@@ -80,7 +92,7 @@ services:
       - ${PUBLIC_DOMAIN:?Set PUBLIC_DOMAIN in .env}
 
   janus:
-    image: canyan/janus-gateway:latest
+    image: canyan/janus-gateway:master@sha256:cddf2da2dba7947c2a3aa7b2e77b363b1200cd6874dbebe32b5148fe187a0d89
     container_name: janus-gateway
     restart: unless-stopped
     depends_on:

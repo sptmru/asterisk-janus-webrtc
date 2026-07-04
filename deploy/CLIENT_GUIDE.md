@@ -17,6 +17,8 @@ private internal IP and a separate public IP address.
 Main components:
 
 - `janus-softphone`: nginx container serving the browser clients.
+- `softphone-https`: HTTPS reverse proxy for the browser UI, using the same
+  Let's Encrypt certificate path as Janus, Asterisk, and coturn.
 - `asterisk`: Asterisk PBX with PJSIP, WebRTC WSS, DTLS-SRTP, and RTP.
 - `janus`: Janus Gateway with SIP plugin and WebSocket/WSS transport.
 - `turn`: coturn TURN server for WebRTC relay candidates.
@@ -25,18 +27,21 @@ Main components:
   scanners.
 
 Important browser note: microphone access requires a secure browser context in
-normal production use. The included `janus-softphone` nginx container serves the
-static UI over plain HTTP. Put this UI behind an HTTPS reverse proxy, Cloudflare
-Tunnel, Azure Application Gateway, or another TLS termination layer before
-handing it to end users. The Asterisk, Janus, and TURN services use the
-Let's Encrypt certificate directly for WSS/TURNS.
+normal production use. The stack includes an HTTPS reverse proxy on
+`SOFTPHONE_HTTPS_PORT`, backed by the same Let's Encrypt certificate generated
+for WebRTC services. The plain `janus-softphone` HTTP port is bound to
+`127.0.0.1` for local diagnostics only.
 
 ## 2. Architecture
 
 ```text
 Browser
   |
-  | HTTP static page on SOFTPHONE_HTTP_PORT
+  | HTTPS static page on SOFTPHONE_HTTPS_PORT
+  v
+softphone-https / nginx reverse proxy
+  |
+  | HTTP inside Docker
   v
 janus-softphone / nginx
 
@@ -74,12 +79,12 @@ Server requirements:
 
 Images used:
 
-- `nginx:1.27-alpine`
+- `nginx:1.27.5-alpine`
 - `ubuntu:22.04` based custom Asterisk image
-- `canyan/janus-gateway:latest`
-- `coturn/coturn:latest`
-- `certbot/certbot:latest`
-- `crazymax/fail2ban:latest`
+- `canyan/janus-gateway:master@sha256:cddf2da2dba7947c2a3aa7b2e77b363b1200cd6874dbebe32b5148fe187a0d89`
+- `coturn/coturn:4.14.0`
+- `certbot/certbot:v5.6.0`
+- `crazymax/fail2ban:1.1.0`
 
 The Asterisk image installs Asterisk and the Digium Opus codec module at build
 time.
@@ -91,7 +96,8 @@ group:
 
 | Purpose | Default | Protocol |
 | --- | ---: | --- |
-| Softphone web UI | `SOFTPHONE_HTTP_PORT=9669` | TCP |
+| Softphone web UI | `SOFTPHONE_HTTPS_PORT=443` | TCP |
+| Local diagnostic web UI | `SOFTPHONE_HTTP_PORT=9669` | TCP on `127.0.0.1` |
 | Let's Encrypt HTTP challenge | `LETSENCRYPT_HTTP_PORT=80` | TCP |
 | Asterisk SIP | `ASTERISK_SIP_PORT=5060` | UDP/TCP |
 | Asterisk WebRTC WSS | `ASTERISK_WSS_PORT=8089` | TCP |
@@ -110,9 +116,8 @@ Default RTP/TURN ranges in `.env.example`:
 
 Keep these ranges non-overlapping.
 
-If a separate HTTPS reverse proxy is used for the web UI, expose the proxy's
-HTTPS port to users and keep `SOFTPHONE_HTTP_PORT` reachable only from that
-proxy where possible.
+Expose `SOFTPHONE_HTTPS_PORT` to users. `SOFTPHONE_HTTP_PORT` is published only
+on `127.0.0.1` by Compose and should not be opened in the cloud firewall.
 
 ## 5. Configuration
 
@@ -130,7 +135,14 @@ PUBLIC_IP=203.0.113.10
 INTERNAL_IP=10.0.0.4
 LETSENCRYPT_EMAIL=admin@example.com
 TURN_USERNAME=webrtc
-TURN_PASSWORD=change-me-turn-password
+TURN_PASSWORD=replace-with-strong-turn-password
+JANUS_ADMIN_SECRET=replace-with-strong-janus-admin-secret
+WEBRTC_1001_PASSWORD=replace-with-strong-1001-password
+WEBRTC_1002_PASSWORD=replace-with-strong-1002-password
+JANUS_2001_PASSWORD=replace-with-strong-2001-password
+JANUS_2002_PASSWORD=replace-with-strong-2002-password
+JANUS_2003_PASSWORD=replace-with-strong-2003-password
+JANUS_2004_PASSWORD=replace-with-strong-2004-password
 ```
 
 Important variables:
@@ -147,6 +159,8 @@ Important variables:
 | `ASTERISK_LOCAL_NETS` | Private networks that Asterisk should treat as local. |
 | `TURN_REALM` | TURN auth realm. Empty value defaults to `PUBLIC_DOMAIN`. |
 | `TURN_USERNAME` / `TURN_PASSWORD` | TURN credentials entered in browser clients. |
+| `JANUS_ADMIN_SECRET` | Janus admin secret value; required even though admin WebSocket is disabled. |
+| `WEBRTC_*_PASSWORD` / `JANUS_*_PASSWORD` | Static Asterisk PJSIP user passwords used by generated configs. |
 
 For Azure, `INTERNAL_IP` should be the VM private NIC address, and `PUBLIC_IP`
 should be the public address attached to the VM or load balancer.
@@ -188,19 +202,22 @@ Do not edit files under `deploy/generated/` manually. They are generated from:
 - `deploy/templates/janus/janus.transport.websockets.jcfg.tpl`
 - `deploy/templates/janus/janus.plugin.sip.jcfg.tpl`
 - `deploy/templates/coturn/turnserver.conf.tpl`
+- `deploy/templates/nginx/softphone-https.conf.tpl`
 
 Regenerate after changing `.env` or templates:
 
 ```sh
 ./deploy/render-configs.sh
-docker compose --env-file .env restart asterisk janus turn
+docker compose --env-file .env restart softphone-https asterisk janus turn
 ```
+
+Config generation fails intentionally if any `replace-with-*` placeholder
+secret is still present in `.env`.
 
 ## 8. Browser Client Configuration
 
-- Open the HTTPS URL provided by the web UI reverse proxy, for example
-  `https://PUBLIC_DOMAIN/`. The nginx container serves `softphone.html` as the
-  default page.
+- Open `https://PUBLIC_DOMAIN/`. The HTTPS reverse proxy serves
+  `softphone.html` as the default page.
 - WSS URL should be `wss://PUBLIC_DOMAIN:8989`.
 - Use users from the Janus range, currently `2001` through `2004`.
 - Optional TURN settings:
@@ -368,7 +385,8 @@ Fail2ban is not banning scanner IPs:
 
 ## 13. Security Notes
 
-- Change all default SIP and TURN passwords before production use.
+- Replace all placeholder SIP, TURN, and Janus secret values in `.env` before
+  production use.
 - Restrict management access to the VM.
 - Keep SIP users limited to required extensions.
 - Keep TURN relay range as small as practical for the expected call volume.
