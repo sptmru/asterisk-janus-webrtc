@@ -53,6 +53,9 @@ secret is still present.
 docker compose --env-file .env up -d --build
 ```
 
+Grafana is available on `127.0.0.1:${GRAFANA_PORT}` after startup. Use SSH
+port-forwarding or a private VPN to access it; do not expose it publicly.
+
 ## Azure networking
 
 Allow or forward these ports to the VM:
@@ -66,6 +69,9 @@ Allow or forward these ports to the VM:
 - UDP `ASTERISK_RTP_PORT_START-ASTERISK_RTP_PORT_END`
 - UDP `JANUS_RTP_PORT_START-JANUS_RTP_PORT_END`
 - UDP `TURN_MIN_PORT-TURN_MAX_PORT`
+
+Do not expose `GRAFANA_PORT`, `PROMETHEUS_PORT`, or `LOKI_PORT` publicly. They
+are bound to `127.0.0.1` by Compose for local/SSH-tunnel access.
 
 The default Docker bridge subnet is `172.30.0.0/24`. Change `VOICE_SUBNET`,
 `ASTERISK_CONTAINER_IP`, and `JANUS_CONTAINER_IP` together if that subnet

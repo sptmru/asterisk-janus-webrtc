@@ -25,6 +25,8 @@ Main components:
 - `certbot`: on-demand Let's Encrypt certificate issuance.
 - `fail2ban`: protects exposed Asterisk PJSIP endpoints from authentication
   scanners.
+- `prometheus`, `grafana`, `node-exporter`, `cadvisor`, `blackbox-exporter`,
+  `loki`, and `promtail`: local monitoring, dashboards, probes, and logs.
 
 Important browser note: microphone access requires a secure browser context in
 normal production use. The stack includes an HTTPS reverse proxy on
@@ -85,6 +87,13 @@ Images used:
 - `coturn/coturn:4.14.0`
 - `certbot/certbot:v5.6.0`
 - `crazymax/fail2ban:1.1.0`
+- `prom/prometheus:v3.13.0`
+- `grafana/grafana:11.6.16`
+- `prom/node-exporter:v1.11.1`
+- `gcr.io/cadvisor/cadvisor:v0.60.3`
+- `prom/blackbox-exporter:v0.28.0`
+- `grafana/loki:3.6.11`
+- `grafana/promtail:3.6.11`
 
 The Asterisk image installs Asterisk and the Digium Opus codec module at build
 time.
@@ -107,6 +116,9 @@ group:
 | Asterisk RTP | `ASTERISK_RTP_PORT_START-ASTERISK_RTP_PORT_END` | UDP |
 | Janus RTP | `JANUS_RTP_PORT_START-JANUS_RTP_PORT_END` | UDP |
 | TURN relay | `TURN_MIN_PORT-TURN_MAX_PORT` | UDP |
+| Grafana | `GRAFANA_PORT=3000` | TCP on `127.0.0.1` |
+| Prometheus | `PROMETHEUS_PORT=9090` | TCP on `127.0.0.1` |
+| Loki | `LOKI_PORT=3100` | TCP on `127.0.0.1` |
 
 Default RTP/TURN ranges in `.env.example`:
 
@@ -118,6 +130,7 @@ Keep these ranges non-overlapping.
 
 Expose `SOFTPHONE_HTTPS_PORT` to users. `SOFTPHONE_HTTP_PORT` is published only
 on `127.0.0.1` by Compose and should not be opened in the cloud firewall.
+Keep Grafana, Prometheus, and Loki on localhost or a private management network.
 
 ## 5. Configuration
 
@@ -143,6 +156,7 @@ JANUS_2001_PASSWORD=replace-with-strong-2001-password
 JANUS_2002_PASSWORD=replace-with-strong-2002-password
 JANUS_2003_PASSWORD=replace-with-strong-2003-password
 JANUS_2004_PASSWORD=replace-with-strong-2004-password
+GRAFANA_ADMIN_PASSWORD=replace-with-strong-grafana-admin-password
 ```
 
 Important variables:
@@ -161,6 +175,7 @@ Important variables:
 | `TURN_USERNAME` / `TURN_PASSWORD` | TURN credentials entered in browser clients. |
 | `JANUS_ADMIN_SECRET` | Janus admin secret value; required even though admin WebSocket is disabled. |
 | `WEBRTC_*_PASSWORD` / `JANUS_*_PASSWORD` | Static Asterisk PJSIP user passwords used by generated configs. |
+| `GRAFANA_ADMIN_PASSWORD` | Initial Grafana admin password. Replace before startup. |
 
 For Azure, `INTERNAL_IP` should be the VM private NIC address, and `PUBLIC_IP`
 should be the public address attached to the VM or load balancer.
@@ -203,6 +218,7 @@ Do not edit files under `deploy/generated/` manually. They are generated from:
 - `deploy/templates/janus/janus.plugin.sip.jcfg.tpl`
 - `deploy/templates/coturn/turnserver.conf.tpl`
 - `deploy/templates/nginx/softphone-https.conf.tpl`
+- `deploy/templates/monitoring/prometheus.yml.tpl`
 
 Regenerate after changing `.env` or templates:
 
@@ -230,7 +246,33 @@ Test extensions:
 - `600`: Asterisk echo test.
 - `700`: Music on hold test.
 
-## 9. User Management
+## 9. Monitoring
+
+Grafana runs on `127.0.0.1:GRAFANA_PORT`, Prometheus on
+`127.0.0.1:PROMETHEUS_PORT`, and Loki on `127.0.0.1:LOKI_PORT`. Access Grafana
+through an SSH tunnel, for example:
+
+```sh
+ssh -L 3000:127.0.0.1:3000 user@SERVER_IP
+```
+
+Then open `http://127.0.0.1:3000` and log in as `admin` with
+`GRAFANA_ADMIN_PASSWORD`.
+
+The monitoring stack includes:
+
+- Host metrics from `node-exporter`.
+- Container metrics from `cadvisor`.
+- HTTPS/TCP availability probes from `blackbox-exporter`.
+- Docker logs in Loki through `promtail`.
+- A provisioned `Janus Softphone Overview` Grafana dashboard.
+- Prometheus alert rules for down targets, failed probes, certificate expiry,
+  high CPU, memory pressure, and low disk.
+
+Prometheus alert rules are local visibility only until an Alertmanager or other
+notification route is added.
+
+## 10. User Management
 
 Users are currently static Asterisk PJSIP users. They are defined in:
 
@@ -273,7 +315,7 @@ Regenerate and restart:
 docker compose --env-file .env restart asterisk
 ```
 
-## 10. Certificate Operations
+## 11. Certificate Operations
 
 Issue a certificate:
 
@@ -294,7 +336,7 @@ For automated renewal, install a host cron entry or systemd timer that runs
 `deploy/renew-letsencrypt.sh`. Keep TCP port `80` available for the HTTP
 challenge during renewal.
 
-## 11. Common Operations
+## 12. Common Operations
 
 Start or update the stack:
 
@@ -314,6 +356,13 @@ View service status:
 docker compose --env-file .env ps
 ```
 
+View monitoring endpoints locally on the server:
+
+```sh
+curl http://127.0.0.1:${PROMETHEUS_PORT:-9090}/-/ready
+curl http://127.0.0.1:${LOKI_PORT:-3100}/ready
+```
+
 View logs:
 
 ```sh
@@ -321,6 +370,7 @@ docker compose --env-file .env logs -f asterisk
 docker compose --env-file .env logs -f janus
 docker compose --env-file .env logs -f turn
 docker compose --env-file .env logs -f janus-softphone
+docker compose --env-file .env logs -f prometheus grafana loki promtail
 ```
 
 Open an Asterisk CLI:
@@ -339,7 +389,7 @@ rtp set debug on
 rtp set debug off
 ```
 
-## 12. Troubleshooting
+## 13. Troubleshooting
 
 Certificate issuance fails:
 
@@ -383,7 +433,19 @@ Fail2ban is not banning scanner IPs:
 - Confirm Docker forwarding rules allow bans through the configured fail2ban
   action.
 
-## 13. Security Notes
+Grafana is not reachable:
+
+- Confirm `docker compose --env-file .env ps grafana prometheus loki`.
+- Confirm the SSH tunnel points to `127.0.0.1:GRAFANA_PORT`.
+- Confirm `GRAFANA_ADMIN_PASSWORD` was set before first Grafana startup.
+
+Monitoring probes fail:
+
+- Confirm `PUBLIC_DOMAIN` resolves to `PUBLIC_IP`.
+- Confirm the public firewall allows the WebRTC ports listed above.
+- Check `blackbox-exporter` and `prometheus` logs.
+
+## 14. Security Notes
 
 - Replace all placeholder SIP, TURN, and Janus secret values in `.env` before
   production use.
@@ -393,8 +455,10 @@ Fail2ban is not banning scanner IPs:
 - Do not expose Janus admin WebSocket.
 - Review logs periodically for SIP authentication failures.
 - Keep Docker images and the host OS patched.
+- Do not expose Grafana, Prometheus, Loki, Promtail, cAdvisor, or node-exporter
+  directly to the public internet.
 
-## 14. File Map
+## 15. File Map
 
 | Path | Purpose |
 | --- | --- |
@@ -405,6 +469,7 @@ Fail2ban is not banning scanner IPs:
 | `deploy/renew-letsencrypt.sh` | Certificate renewal helper. |
 | `deploy/render-configs.sh` | Generates runtime configs from templates. |
 | `deploy/templates/` | Source templates for generated configs. |
+| `monitoring/` | Prometheus, Grafana, Loki, Promtail, and blackbox configs. |
 | `deploy/generated/` | Generated runtime configs, not edited manually. |
 | `asterisk/config/extensions.conf` | Dialplan and test extensions. |
 | `softphone.html` | Client-facing Janus-based browser softphone. |

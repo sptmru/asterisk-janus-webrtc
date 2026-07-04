@@ -1,0 +1,54 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - /etc/prometheus/rules/*.yml
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ["prometheus:9090"]
+
+  - job_name: node-exporter
+    static_configs:
+      - targets: ["node-exporter:9100"]
+
+  - job_name: cadvisor
+    static_configs:
+      - targets: ["cadvisor:8080"]
+
+  - job_name: blackbox-http
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+          - https://${PUBLIC_DOMAIN}:${SOFTPHONE_HTTPS_PORT}/
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  - job_name: blackbox-tcp
+    metrics_path: /probe
+    params:
+      module: [tcp_connect]
+    static_configs:
+      - targets:
+          - ${PUBLIC_DOMAIN}:${SOFTPHONE_HTTPS_PORT}
+          - ${PUBLIC_DOMAIN}:${JANUS_WSS_PORT}
+          - ${PUBLIC_DOMAIN}:${ASTERISK_WSS_PORT}
+          - ${PUBLIC_DOMAIN}:${ASTERISK_SIP_PORT}
+          - ${PUBLIC_DOMAIN}:${TURN_PORT}
+          - ${PUBLIC_DOMAIN}:${TURN_TLS_PORT}
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115

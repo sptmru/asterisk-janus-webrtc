@@ -1,0 +1,58 @@
+groups:
+  - name: janus-softphone-availability
+    rules:
+      - alert: PrometheusTargetDown
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Prometheus target is down"
+          description: "{{ $labels.job }} target {{ $labels.instance }} has been unreachable for more than 2 minutes."
+
+      - alert: ExternalProbeFailed
+        expr: probe_success == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "External service probe failed"
+          description: "{{ $labels.instance }} failed a blackbox probe for more than 2 minutes."
+
+      - alert: TlsCertificateExpiresSoon
+        expr: (probe_ssl_earliest_cert_expiry - time()) < 14 * 24 * 60 * 60
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "TLS certificate expires soon"
+          description: "{{ $labels.instance }} TLS certificate expires in less than 14 days."
+
+  - name: janus-softphone-host
+    rules:
+      - alert: HostHighCpu
+        expr: 100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Host CPU usage is high"
+          description: "{{ $labels.instance }} CPU usage has been above 85% for 10 minutes."
+
+      - alert: HostLowDisk
+        expr: 100 * (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs"}) < 15
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Host disk space is low"
+          description: "{{ $labels.instance }} filesystem {{ $labels.mountpoint }} has less than 15% free space."
+
+      - alert: HostMemoryPressure
+        expr: 100 * (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 90
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Host memory usage is high"
+          description: "{{ $labels.instance }} memory usage has been above 90% for 10 minutes."
