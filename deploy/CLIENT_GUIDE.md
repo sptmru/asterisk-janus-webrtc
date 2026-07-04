@@ -90,7 +90,7 @@ Images used:
 - `prom/prometheus:v3.13.0`
 - `grafana/grafana:11.6.16`
 - `prom/node-exporter:v1.11.1`
-- `gcr.io/cadvisor/cadvisor:v0.60.3`
+- `gcr.io/cadvisor/cadvisor:v0.52.1`
 - `prom/blackbox-exporter:v0.28.0`
 - `grafana/loki:3.6.11`
 - `grafana/promtail:3.6.11`
