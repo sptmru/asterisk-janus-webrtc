@@ -18,6 +18,12 @@ scrape_configs:
     static_configs:
       - targets: ["cadvisor:8080"]
 
+  - job_name: asterisk
+    metrics_path: /metrics
+    fallback_scrape_protocol: PrometheusText0.0.4
+    static_configs:
+      - targets: ["${INTERNAL_IP}:${ASTERISK_HTTP_PORT}"]
+
   - job_name: blackbox-http
     metrics_path: /probe
     params:
@@ -33,17 +39,31 @@ scrape_configs:
       - target_label: __address__
         replacement: blackbox-exporter:9115
 
+  - job_name: blackbox-tls
+    metrics_path: /probe
+    params:
+      module: [tcp_tls_connect]
+    static_configs:
+      - targets:
+          - ${PUBLIC_DOMAIN}:${SOFTPHONE_HTTPS_PORT}
+          - ${PUBLIC_DOMAIN}:${JANUS_WSS_PORT}
+          - ${PUBLIC_DOMAIN}:${ASTERISK_WSS_PORT}
+          - ${PUBLIC_DOMAIN}:${TURN_TLS_PORT}
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
   - job_name: blackbox-tcp
     metrics_path: /probe
     params:
       module: [tcp_connect]
     static_configs:
       - targets:
-          - ${PUBLIC_DOMAIN}:${SOFTPHONE_HTTPS_PORT}
-          - ${PUBLIC_DOMAIN}:${JANUS_WSS_PORT}
-          - ${PUBLIC_DOMAIN}:${ASTERISK_WSS_PORT}
           - ${PUBLIC_DOMAIN}:${TURN_PORT}
-          - ${PUBLIC_DOMAIN}:${TURN_TLS_PORT}
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target

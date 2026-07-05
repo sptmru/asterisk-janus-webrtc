@@ -109,6 +109,7 @@ group:
 | Softphone web UI | `SOFTPHONE_HTTPS_PORT=443` | TCP |
 | Local diagnostic web UI | `SOFTPHONE_HTTP_PORT=9669` | TCP on `127.0.0.1` |
 | Let's Encrypt HTTP challenge | `LETSENCRYPT_HTTP_PORT=80` | TCP |
+| Asterisk metrics HTTP | `ASTERISK_HTTP_PORT=18088` | TCP |
 | Asterisk SIP | `ASTERISK_SIP_PORT=5060` | UDP/TCP |
 | Asterisk WebRTC WSS | `ASTERISK_WSS_PORT=8089` | TCP |
 | Janus WSS | `JANUS_WSS_PORT=8989` | TCP |
@@ -262,6 +263,7 @@ The monitoring stack includes:
 
 - Host metrics from `node-exporter`.
 - Container metrics from `cadvisor`.
+- Asterisk metrics from `res_prometheus` on `ASTERISK_HTTP_PORT`.
 - HTTPS/TCP availability probes from `blackbox-exporter`.
 - Docker logs in Loki through `promtail`.
 - A provisioned `Janus Softphone Overview` Grafana dashboard.
@@ -431,8 +433,9 @@ Fail2ban is not banning scanner IPs:
 
 - Confirm `fail2ban` is running with host networking.
 - Confirm Asterisk logs are present in the shared `asterisk_logs` volume.
-- Confirm Docker forwarding rules allow bans through the configured fail2ban
-  action.
+- Confirm the configured fail2ban action installs `f2b-*` chains in `INPUT`.
+  Asterisk uses host networking, so `DOCKER-USER` alone does not block SIP
+  traffic that terminates on the host network namespace.
 
 Grafana is not reachable:
 

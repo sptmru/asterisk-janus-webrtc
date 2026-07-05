@@ -151,7 +151,7 @@
       "pluginVersion": "11.6.16",
       "targets": [
         {
-          "expr": "probe_success{job=~\"blackbox-.*\", instance!~\".*:5060$\"}",
+          "expr": "probe_success{job=\"blackbox-http\"} or probe_success{job=\"blackbox-tls\"} or probe_success{job=\"blackbox-tcp\", instance=~\".*:3478$\"}",
           "legendFormat": "{{instance}}",
           "refId": "A"
         }
@@ -224,6 +224,323 @@
       ],
       "title": "Host Network Traffic",
       "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 16
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "11.6.16",
+      "targets": [
+        {
+          "expr": "max_over_time(asterisk_calls_count[2m])",
+          "legendFormat": "recent active calls",
+          "refId": "A"
+        }
+      ],
+      "title": "Asterisk Active Calls (2m)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 6,
+        "y": 16
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "11.6.16",
+      "targets": [
+        {
+          "expr": "max_over_time(asterisk_channels_count[2m])",
+          "legendFormat": "recent active channels",
+          "refId": "A"
+        }
+      ],
+      "title": "Asterisk Active Channels (2m)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "id": 7,
+      "options": {
+        "displayMode": "gradient",
+        "maxVizHeight": 300,
+        "minVizHeight": 16,
+        "minVizWidth": 8,
+        "namePlacement": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "valueMode": "color"
+      },
+      "pluginVersion": "11.6.16",
+      "targets": [
+        {
+          "expr": "max_over_time(asterisk_endpoints_channels_count[2m])",
+          "legendFormat": "{{resource}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Asterisk Channels By Endpoint (2m)",
+      "type": "bargauge"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "gray",
+                  "text": "UNKNOWN"
+                },
+                "1": {
+                  "color": "orange",
+                  "text": "OFFLINE"
+                },
+                "2": {
+                  "color": "green",
+                  "text": "ONLINE"
+                }
+              },
+              "type": "value"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 21
+      },
+      "id": 8,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "expr": "asterisk_endpoints_state",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "{{resource}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Asterisk Endpoint State",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "Loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 21
+      },
+      "id": 9,
+      "targets": [
+        {
+          "expr": "sum by (container) (count_over_time({container=~\"janus-asterisk|janus-gateway|janus-turn\"} |~ \"ERROR|WARNING|Failed|failed|Unable|authentication\" [5m]))",
+          "legendFormat": "{{container}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Voice Log Events",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "Loki"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 29
+      },
+      "id": 10,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "expr": "{container=~\"janus-asterisk|janus-gateway|janus-turn\"} |~ \"ERROR|WARNING|Failed|failed|Unable|authentication\"",
+          "refId": "A"
+        }
+      ],
+      "title": "Recent Voice Errors",
+      "type": "logs"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "Loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 38
+      },
+      "id": 11,
+      "targets": [
+        {
+          "expr": "sum(count_over_time({container=\"janus-fail2ban\"} |= \"Found\" [5m]))",
+          "legendFormat": "found",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(count_over_time({container=\"janus-fail2ban\"} |~ \"Ban|already banned\" [5m]))",
+          "legendFormat": "ban events",
+          "refId": "B"
+        }
+      ],
+      "title": "Fail2ban Events",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "Loki"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 38
+      },
+      "id": 12,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "expr": "{container=\"janus-fail2ban\"} |~ \"Found|Ban|already banned|ERROR|WARNING\"",
+          "refId": "A"
+        }
+      ],
+      "title": "Recent Fail2ban Activity",
+      "type": "logs"
     }
   ],
   "refresh": "30s",

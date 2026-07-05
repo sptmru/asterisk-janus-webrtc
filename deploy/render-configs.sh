@@ -90,6 +90,7 @@ mkdir -p "$ROOT_DIR/deploy/generated/asterisk" "$ROOT_DIR/deploy/generated/janus
 
 envsubst < "$ROOT_DIR/deploy/templates/asterisk/pjsip.conf.tpl" > "$ROOT_DIR/deploy/generated/asterisk/pjsip.conf"
 envsubst < "$ROOT_DIR/deploy/templates/asterisk/http.conf.tpl" > "$ROOT_DIR/deploy/generated/asterisk/http.conf"
+envsubst < "$ROOT_DIR/deploy/templates/asterisk/prometheus.conf.tpl" > "$ROOT_DIR/deploy/generated/asterisk/prometheus.conf"
 envsubst < "$ROOT_DIR/deploy/templates/asterisk/rtp.conf.tpl" > "$ROOT_DIR/deploy/generated/asterisk/rtp.conf"
 envsubst < "$ROOT_DIR/deploy/templates/janus/janus.jcfg.tpl" > "$ROOT_DIR/deploy/generated/janus/janus.jcfg"
 envsubst < "$ROOT_DIR/deploy/templates/janus/janus.transport.websockets.jcfg.tpl" > "$ROOT_DIR/deploy/generated/janus/janus.transport.websockets.jcfg"

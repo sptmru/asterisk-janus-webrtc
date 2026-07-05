@@ -27,6 +27,7 @@ services:
       - ${LETSENCRYPT_PATH:-/etc/letsencrypt}:/etc/letsencrypt:ro
       - ./deploy/generated/asterisk/pjsip.conf:/etc/asterisk/pjsip.conf:ro
       - ./deploy/generated/asterisk/http.conf:/etc/asterisk/http.conf:ro
+      - ./deploy/generated/asterisk/prometheus.conf:/etc/asterisk/prometheus.conf:ro
       - ./deploy/generated/asterisk/rtp.conf:/etc/asterisk/rtp.conf:ro
       - asterisk_logs:/var/log/asterisk
 
