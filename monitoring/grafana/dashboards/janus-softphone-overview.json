@@ -212,17 +212,17 @@
       "id": 4,
       "targets": [
         {
-          "expr": "sum by (name) (rate(container_network_receive_bytes_total{name=~\".*janus.*|.*asterisk.*|.*turn.*\"}[5m]))",
-          "legendFormat": "{{name}} rx",
+          "expr": "sum by (device) (rate(node_network_receive_bytes_total{device!~\"lo|veth.*|docker.*|br-.*\"}[5m]))",
+          "legendFormat": "{{device}} rx",
           "refId": "A"
         },
         {
-          "expr": "sum by (name) (rate(container_network_transmit_bytes_total{name=~\".*janus.*|.*asterisk.*|.*turn.*\"}[5m]))",
-          "legendFormat": "{{name}} tx",
+          "expr": "sum by (device) (rate(node_network_transmit_bytes_total{device!~\"lo|veth.*|docker.*|br-.*\"}[5m]))",
+          "legendFormat": "{{device}} tx",
           "refId": "B"
         }
       ],
-      "title": "Voice Container Network",
+      "title": "Host Network Traffic",
       "type": "timeseries"
     }
   ],
