@@ -47,7 +47,6 @@ scrape_configs:
       - targets:
           - ${PUBLIC_DOMAIN}:${SOFTPHONE_HTTPS_PORT}
           - ${PUBLIC_DOMAIN}:${JANUS_WSS_PORT}
-          - ${PUBLIC_DOMAIN}:${ASTERISK_WSS_PORT}
           - ${PUBLIC_DOMAIN}:${TURN_TLS_PORT}
     relabel_configs:
       - source_labels: [__address__]

@@ -261,12 +261,12 @@
       "pluginVersion": "11.6.16",
       "targets": [
         {
-          "expr": "max_over_time(asterisk_calls_count[2m])",
-          "legendFormat": "recent active calls",
+          "expr": "asterisk_calls_count",
+          "legendFormat": "active calls",
           "refId": "A"
         }
       ],
-      "title": "Asterisk Active Calls (2m)",
+      "title": "Asterisk Active Calls",
       "type": "stat"
     },
     {
@@ -305,12 +305,12 @@
       "pluginVersion": "11.6.16",
       "targets": [
         {
-          "expr": "max_over_time(asterisk_channels_count[2m])",
-          "legendFormat": "recent active channels",
+          "expr": "asterisk_channels_count",
+          "legendFormat": "active channels",
           "refId": "A"
         }
       ],
-      "title": "Asterisk Active Channels (2m)",
+      "title": "Asterisk Active Channels",
       "type": "stat"
     },
     {
@@ -352,12 +352,12 @@
       "pluginVersion": "11.6.16",
       "targets": [
         {
-          "expr": "max_over_time(asterisk_endpoints_channels_count[2m])",
+          "expr": "asterisk_endpoints_channels_count",
           "legendFormat": "{{resource}}",
           "refId": "A"
         }
       ],
-      "title": "Asterisk Channels By Endpoint (2m)",
+      "title": "Asterisk Channels By Endpoint",
       "type": "bargauge"
     },
     {
@@ -543,7 +543,7 @@
       "type": "logs"
     }
   ],
-  "refresh": "30s",
+  "refresh": "10s",
   "schemaVersion": 39,
   "tags": [
     "janus",
