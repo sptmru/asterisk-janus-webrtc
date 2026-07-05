@@ -1,7 +1,7 @@
 general: {
-	local_ip = "${JANUS_CONTAINER_IP}"
-	local_media_ip = "${JANUS_CONTAINER_IP}"
-	sdp_ip = "${JANUS_CONTAINER_IP}"
+	local_ip = "${JANUS_SIP_IP}"
+	local_media_ip = "${JANUS_SIP_IP}"
+	sdp_ip = "${JANUS_SIP_IP}"
 	keepalive_interval = 120
 	behind_nat = true
 	user_agent = "janus-softphone-sip"

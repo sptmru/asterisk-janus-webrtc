@@ -12,7 +12,7 @@ For the full client-facing deployment and operations guide, see
    - `PUBLIC_DOMAIN` to the DNS name used by browsers.
    - `PUBLIC_IP` to the public NAT address announced in WebRTC/SIP SDP.
    - `INTERNAL_IP` to the Azure VM private address.
-   - `ASTERISK_LOCAL_NETS` to include the Docker subnet and private Azure/VPN CIDRs.
+   - `ASTERISK_LOCAL_NETS` to include private Azure/VPN CIDRs.
    - `LETSENCRYPT_EMAIL` to the email used for Let's Encrypt registration.
    - `TURN_USERNAME` and `TURN_PASSWORD` for browser TURN credentials.
    - `JANUS_ADMIN_SECRET` and SIP user passwords to strong per-deploy values.
@@ -73,11 +73,10 @@ Allow or forward these ports to the VM:
 Do not expose `GRAFANA_PORT`, `PROMETHEUS_PORT`, or `LOKI_PORT` publicly. They
 are bound to `127.0.0.1` by Compose for local/SSH-tunnel access.
 
-The default Docker bridge subnet is `172.30.0.0/24`. Change `VOICE_SUBNET`,
-`ASTERISK_CONTAINER_IP`, and `JANUS_CONTAINER_IP` together if that subnet
-conflicts with Azure/VPN routes.
+The Asterisk, Janus, and TURN services use host networking. This avoids Docker
+creating per-port proxy bindings for large UDP RTP ranges.
 
-The TURN service uses host networking and advertises
+The TURN service advertises
 `external-ip=PUBLIC_IP/INTERNAL_IP`, which matches an Azure VM behind NAT.
 
 `SOFTPHONE_HTTP_PORT` is bound to `127.0.0.1` for local diagnostics only. The

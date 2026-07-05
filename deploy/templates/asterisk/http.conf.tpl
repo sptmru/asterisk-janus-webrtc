@@ -1,9 +1,9 @@
 [general]
 enabled=yes
 bindaddr=0.0.0.0
-bindport=8088
+bindport=${ASTERISK_HTTP_PORT}
 
 tlsenable=yes
-tlsbindaddr=0.0.0.0:8089
+tlsbindaddr=0.0.0.0:${ASTERISK_WSS_PORT}
 tlscertfile=/etc/letsencrypt/live/${PUBLIC_DOMAIN}/fullchain.pem
 tlsprivatekey=/etc/letsencrypt/live/${PUBLIC_DOMAIN}/privkey.pem

@@ -1,9 +1,9 @@
 general: {
 	json = "indented"
 	ws = true
-	ws_port = 8188
+	ws_port = ${JANUS_WS_PORT}
 	wss = true
-	wss_port = 8989
+	wss_port = ${JANUS_WSS_PORT}
 }
 
 admin: {

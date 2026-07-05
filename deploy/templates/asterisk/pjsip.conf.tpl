@@ -5,13 +5,13 @@ user_agent=janus-softphone-asterisk
 [transport-udp]
 type=transport
 protocol=udp
-bind=0.0.0.0:5060
+bind=0.0.0.0:${ASTERISK_SIP_PORT}
 ${ASTERISK_LOCAL_NET_LINES}
 
 [transport-wss]
 type=transport
 protocol=wss
-bind=0.0.0.0:8089
+bind=0.0.0.0:${ASTERISK_WSS_PORT}
 external_media_address=${PUBLIC_IP}
 external_signaling_address=${PUBLIC_DOMAIN}
 ${ASTERISK_LOCAL_NET_LINES}

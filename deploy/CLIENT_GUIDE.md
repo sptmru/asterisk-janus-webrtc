@@ -52,7 +52,7 @@ Browser softphone.html
   | WSS: JANUS_WSS_PORT
   v
 Janus Gateway
-  | SIP UDP inside Docker network
+  | SIP UDP on host network
   v
 Asterisk PJSIP Janus endpoint
 
@@ -66,8 +66,9 @@ coturn on host network
 WebRTC media peers
 ```
 
-Asterisk and Janus run on a Docker bridge network. coturn uses host networking
-so it can bind the VM private address and advertise the public NAT address using
+Asterisk, Janus, and coturn run with Docker host networking. This avoids Docker
+creating thousands of per-port UDP proxy bindings for RTP and lets coturn bind
+the VM private address and advertise the public NAT address using
 `external-ip=PUBLIC_IP/INTERNAL_IP`.
 
 ## 3. Dependencies
@@ -166,9 +167,7 @@ Important variables:
 | `PUBLIC_DOMAIN` | DNS name used by browsers and certificates. |
 | `PUBLIC_IP` | Public NAT IP announced in SDP/ICE/TURN. |
 | `INTERNAL_IP` | VM private IP, used by coturn bind/relay settings. |
-| `VOICE_SUBNET` | Docker bridge subnet for Asterisk and Janus. |
-| `ASTERISK_CONTAINER_IP` | Static Docker IP for Asterisk. |
-| `JANUS_CONTAINER_IP` | Static Docker IP for Janus. |
+| `JANUS_SIP_IP` | Address Janus advertises to Asterisk in SIP/SDP. Defaults to `INTERNAL_IP`. |
 | `LETSENCRYPT_PATH` | Host path mounted into services for certificates. |
 | `ASTERISK_LOCAL_NETS` | Private networks that Asterisk should treat as local. |
 | `TURN_REALM` | TURN auth realm. Empty value defaults to `PUBLIC_DOMAIN`. |
@@ -408,8 +407,7 @@ Registration succeeds but calls have no audio:
 
 - Confirm UDP RTP ranges are open in the firewall.
 - Confirm `PUBLIC_IP` is correct.
-- Confirm `ASTERISK_LOCAL_NETS` includes the Docker subnet and private Azure
-  network.
+- Confirm `ASTERISK_LOCAL_NETS` includes the private Azure network.
 - Try enabling TURN in the browser client.
 
 TURN connection works but relay media fails:
@@ -421,8 +419,8 @@ TURN connection works but relay media fails:
 
 Janus users cannot register:
 
-- Confirm Janus can resolve `PUBLIC_DOMAIN` to `ASTERISK_CONTAINER_IP` through
-  the Compose `extra_hosts` entry.
+- Confirm Janus can resolve `PUBLIC_DOMAIN` to `INTERNAL_IP` through the Compose
+  `extra_hosts` entry.
 - Check Janus logs and Asterisk PJSIP logs.
 - Confirm the user exists as a `janus-endpoint` in generated `pjsip.conf`.
 
