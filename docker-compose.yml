@@ -52,6 +52,7 @@ services:
     image: coturn/coturn:4.14.0
     container_name: janus-turn
     restart: unless-stopped
+    user: root
     network_mode: host
     volumes:
       - ./deploy/generated/coturn/turnserver.conf:/etc/coturn/turnserver.conf:ro

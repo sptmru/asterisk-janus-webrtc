@@ -42,7 +42,6 @@ scrape_configs:
           - ${PUBLIC_DOMAIN}:${SOFTPHONE_HTTPS_PORT}
           - ${PUBLIC_DOMAIN}:${JANUS_WSS_PORT}
           - ${PUBLIC_DOMAIN}:${ASTERISK_WSS_PORT}
-          - ${PUBLIC_DOMAIN}:${ASTERISK_SIP_PORT}
           - ${PUBLIC_DOMAIN}:${TURN_PORT}
           - ${PUBLIC_DOMAIN}:${TURN_TLS_PORT}
     relabel_configs:

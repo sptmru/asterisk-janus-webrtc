@@ -268,6 +268,9 @@ The monitoring stack includes:
 - Prometheus alert rules for down targets, failed probes, certificate expiry,
   high CPU, memory pressure, and low disk.
 
+The external TCP probes intentionally do not check `ASTERISK_SIP_PORT`, because
+the generated Asterisk SIP transport listens on UDP.
+
 Prometheus alert rules are local visibility only until an Alertmanager or other
 notification route is added.
 
